@@ -12,6 +12,7 @@ get_modules <- function(){
   mod <- list(
     ## Performance measures
     recruit = "mod_recruit",
+    recruit2 = "mod_recruit2",
     completeness = "mod_completeness",
     consistency = "mod_consistency",
     timeliness = "mod_timeliness",
