@@ -6,11 +6,6 @@
 #'
 #' @noRd
 
-library(shinydashboard)
-library(shiny)
-library(lubridate)
-library(data.table)
-
 app_ui <- function() {
 
 

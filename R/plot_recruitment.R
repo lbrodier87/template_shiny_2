@@ -2,21 +2,19 @@
 #'
 #' This function plots a recruitment curve by centers
 #'
+#' @param data dataframe
+#' @param date.var variable containing dates
+#' @param centre.var variable containing centers
 #'
 #' @return list of dataframes from secuTrial export
 #' @import ggplot2
 #' @import plotly
 #' @import magrittr
 #' @export
-
-library(ggplot2)
-library(plotly)
-library(magrittr)
-
 plot_recruit <- function(data, date.var, centre.var){
-  
+
   enr <- data
-  
+
   ## Order by signed consent date and select only 2 columns
   df <- enr[order(enr[[date.var]]), c(date.var, centre.var)]
   ## Include row numbers for df
@@ -32,21 +30,21 @@ plot_recruit <- function(data, date.var, centre.var){
   df.center.all <- df.center
   ## Get levels of centers without "All"
   ctr.levels <- levels(factor(df.center[[centre.var]]))
-  
+
   df.center.all$centre.short <- "All"
   df.center.all$n <- df.center.all[,3]
   df.center <- rbind(df.center, df.center.all)
   names(df.center) <- c("Baseline", "Center", "total", "n")
   df.center$Center <- factor(df.center$Center, levels = c("All", ctr.levels))
-  
-  
+
+
   p <- ggplot() + geom_line(mapping = aes(x = Baseline, y = n, color = Center), data = df.center) +
     labs(x = "Date of randomization", y = "Patients included") + theme_bw()
   ggplotly(p)
 }
 
 get_recruitment_plot_df <- function(df){
-  
+
   plot.df <- df %>%
     select(centre.short, rando_date.date) %>% arrange(rando_date.date) %>%
     ## Determine the  no of patients in EACH center
@@ -66,7 +64,7 @@ get_recruitment_plot_df <- function(df){
     mutate(centre.n = forcats::fct_infreq(centre.n)) %>%
     ## Rename cols
     select("Center" = centre.n, "Baseline" = rando_date.date, n)
-  
+
   return(plot.df)
 }
 

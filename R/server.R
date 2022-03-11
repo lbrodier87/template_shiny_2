@@ -5,8 +5,6 @@
 #' @import shiny
 #' @noRd
 
-library(shiny)
-
 app_server <- function(input, output, session ) {
   ## Get all module names
   mod <- get_modules()
