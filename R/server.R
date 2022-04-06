@@ -16,6 +16,8 @@ app_server <- function(input, output, session ) {
   ## Recruitment tab
   callModule(mod_recruitment2_server, mod$recruit2, data.randomized = rx.data$rx_random)
   callModule(mod_recruitment_server, mod$recruit, data.randomized = rx.data$rx_random)
+  callModule(mod_recruitment_map_server, mod$recruitmap, dat = rx.data$rx_random, locations = data$locations)
+
 }
 
 
