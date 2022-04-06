@@ -46,6 +46,7 @@ app_ui <- function() {
                         menuItem("Performance measures", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
                                  menuItem("Recruitment", tabName = mod$recruit, icon = icon("chart-line")),
+                                 menuItem("Recruitment map", tabName = mod$recruitmap, icon = icon("chart-map")),
                                  menuItem("Retention", tabName = mod$retention, startExpanded = TRUE, icon = icon("door-open")),
                                  menuItem("Data quality", startExpanded = TRUE, icon = icon("database"),
                                           menuItem("Completeness", tabName = mod$completeness),
@@ -75,7 +76,8 @@ app_ui <- function() {
 
                         ## Recruitment tab
                         mod_recruitment2_ui(mod$recruit2, label = mod$recruit2),
-                        mod_recruitment_ui(mod$recruit, label = mod$recruit)
+                        mod_recruitment_ui(mod$recruit, label = mod$recruit),
+                        mod_recruitment_map_ui(mod$recruitmap, label = mod$recruitmap)
                       )
                     ) ## dashboardBody
       ) ## dashboardPage
