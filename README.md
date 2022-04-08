@@ -15,7 +15,7 @@ modules, that can be used for clinical trials and research. When
 installed in R, the package is then called `shinytemplate`
 (`template_shiny` is not a valid R package name).
 
-## Packages only available on github required to use the package
+## Packages only available on github and required to use the package
 
 Two packages need to be installed and are not available on CRAN. You can
 install them with the following commands:
@@ -23,7 +23,7 @@ install them with the following commands:
 -   [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/)
 
 ``` r
-remotes::install_github("CTU-Bern/accrualPlot")
+devtools::install_github("CTU-Bern/accrualPlot")
 ```
 
 -   [`secuTrialR`](https://swissclinicaltrialorganisation.github.io/secuTrialR/)
