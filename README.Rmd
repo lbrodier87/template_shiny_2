@@ -30,7 +30,7 @@ Two packages need to be installed and are not available on CRAN. You can install
 - [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/)
 
 ```{r eval = FALSE}
-remotes::install_github("CTU-Bern/accrualPlot")
+devtools::install_github("CTU-Bern/accrualPlot")
 ```
 
 - [`secuTrialR`](https://swissclinicaltrialorganisation.github.io/secuTrialR/)
