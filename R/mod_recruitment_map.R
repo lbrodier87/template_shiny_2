@@ -1,8 +1,19 @@
-
-
-library(leaflet)
-library(dplyr)
-
+#' Recruitment UI Functions including a map of the sites
+#'
+#' @description This module provides a leaflet map with markers for the sites
+#'   together we a recruitment plot. Clicking on the map markers makes the relevant
+#'   line on the recruitment plot become thicker. Hovering over the marker also
+#'   shows various information on the site.
+#' @rdname mod_recruitment_map
+#' @param id,input,output,session,label Internal parameters for {shiny}.
+#'
+#' @importFrom plotly ggplotly renderPlotly layout
+#' @importFrom shiny NS tagList
+#' @importFrom accrualPlot accrual_create_df gg_accrual_plot_cum accrual_table
+#' @importFrom leaflet leaflet addTiles addMarkers renderLeaflet
+#' @importFrom ggplot2 geom_step theme_bw
+#' @importFrom dplyr group_by summarize n left_join
+#'
 mod_recruitment_map_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
@@ -31,6 +42,10 @@ mod_recruitment_map_ui <- function(id, label){
 }
 
 
+#' @rdname mod_recruitment_map
+#' @param input,output,session Internal parameters for {shiny}.
+#' @param dat reactive recruitment data
+#' @param locations dataframe containing the locations of the sites.
 mod_recruitment_map_server <- function(input, output, session, dat, locations){
 
   ns <- session$ns

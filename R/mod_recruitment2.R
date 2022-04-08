@@ -1,13 +1,14 @@
-#' recruitment UI Function
+#' Recruitment module Functions
 #'
-#' @description A shiny Module.
-#'
-#' @param id,input,output,session Internal parameters for {shiny}.
-#' @import plotly
-#'
-#' @noRd
+#' @description This module presents a recruitment plot and table using the accrualPlot package
+#' @rdname mod_recruitment2
+#' @param id,input,output,session,label Internal parameters for {shiny}.
 #'
 #' @importFrom shiny NS tagList
+#' @importFrom accrualPlot accrual_create_df gg_accrual_plot_cum accrual_table
+#' @importFrom gt render_gt gt tab_options
+#' @importFrom plotly ggplotly renderPlotly layout
+#'
 
 mod_recruitment2_ui <- function(id, label){
 
@@ -58,8 +59,10 @@ mod_recruitment2_ui <- function(id, label){
 }
 
 #' recruitment Server Function
+#' @rdname mod_recruitment2
+#' @param data.randomized reactive data containing randomization info
+#'   (see {mod_recruitment_prediction} for example without reactivity)
 #'
-#' @noRd
 mod_recruitment2_server <- function(input, output, session, data.randomized){
 
   ns <- session$ns
@@ -103,9 +106,5 @@ mod_recruitment2_server <- function(input, output, session, data.randomized){
 
 }
 
-## To be copied in the UI
-# mod_recruitment2_ui("recruitment2_ui_1")
 
-## To be copied in the server
-# callModule(mod_recruitment2_server, "recruitment2_ui_1")
 
