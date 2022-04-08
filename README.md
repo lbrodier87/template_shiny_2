@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# shinytemplate/template\_shiny
+# shinytemplate/template_shiny
 
 <!-- badges: start -->
 
