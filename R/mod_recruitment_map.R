@@ -10,7 +10,7 @@
 #' @importFrom plotly ggplotly renderPlotly layout
 #' @importFrom shiny NS tagList
 #' @importFrom accrualPlot accrual_create_df gg_accrual_plot_cum accrual_table
-#' @importFrom leaflet leaflet addTiles addMarkers renderLeaflet
+#' @importFrom leaflet leaflet addTiles addMarkers renderLeaflet leafletOutput
 #' @importFrom ggplot2 geom_step theme_bw
 #' @importFrom dplyr group_by summarize n left_join
 #'
