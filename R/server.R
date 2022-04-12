@@ -14,10 +14,15 @@ app_server <- function(input, output, session ) {
   data <- get_data()
 
   ## Recruitment tab
-  callModule(mod_recruitment_server, mod$recruit, data.randomized = rx.data$rx_random)
-  callModule(mod_recruitment2_server, mod$recruit2, data.randomized = rx.data$rx_random)
-  callModule(mod_recruitment_map_server, mod$recruitmap, dat = rx.data$rx_random, locations = data$locations)
-  callModule(mod_recruitment_prediction_server, mod$recruitment_prediction, data = data$randomized)
+  callModule(mod_recruitment_server, mod$recruit,
+             data.randomized = rx.data$rx_random)
+  callModule(mod_recruitment2_server, mod$recruit2,
+             data.randomized = rx.data$rx_random, locations = data$locations,
+             all_data = data$randomized)
+  callModule(mod_recruitment_map_server, mod$recruitmap,
+             dat = rx.data$rx_random, locations = data$locations)
+  callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
+             data = data$randomized)
   callModule(mod_retention_server, mod$retention, data)
   callModule(mod_completeness_server, mod$completeness, data)
   callModule(mod_consistency_server, mod$consistency, data)

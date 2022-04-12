@@ -34,7 +34,6 @@ mod_recruitment2_ui <- function(id, label){
 
                   ")),
 
-
           fluidRow(
             tags$style(".small-box.bg-yellow { background-color: #a5d7d2 !important; color: #333333 !important; }"),
             tags$style(".small-box.bg-red { background-color: #d20537 !important; color: #333333 !important; }"),
@@ -42,19 +41,24 @@ mod_recruitment2_ui <- function(id, label){
             valueBoxOutput(ns("estimated"), width = 6)
           ),
 
+          uiOutput(ns("targetsUI")),
+
           fluidRow(
             tabBox(
               width = 12,
               title = "",
-              id = "tabset1", height = "850px",
+              id = "tabset1", height = "450px",
               selected = "Recruitment over time by center",
               tabPanel("Recruitment over time by center",
-                       plotlyOutput(ns('recruitplot'), height = "750"),
-                       tags$br(),
-                       gt::gt_output(ns('recruittable')))
+                       plotlyOutput(ns('recruitplot'), height = "400"),
+                       tags$br()
+                       )
 
             )
-          )
+          ),
+          tags$br(),
+          tags$br(),
+          fluidRow(gt::gt_output(ns('recruittable')))
   )
 }
 
@@ -63,7 +67,7 @@ mod_recruitment2_ui <- function(id, label){
 #' @param data.randomized reactive data containing randomization info
 #'   (see {mod_recruitment_prediction} for example without reactivity)
 #'
-mod_recruitment2_server <- function(input, output, session, data.randomized){
+mod_recruitment2_server <- function(input, output, session, data.randomized, locations, all_data){
 
   ns <- session$ns
 
@@ -87,6 +91,8 @@ mod_recruitment2_server <- function(input, output, session, data.randomized){
     accrualPlot::accrual_create_df(data.randomized()$rando_date.date,
                                    by = data.randomized()$centre.short)
   })
+  acc2 <- accrualPlot::accrual_create_df(all_data$rando_date.date,
+                                   by = all_data$centre.short)
 
 
   ## Recruitment plot
@@ -102,6 +108,47 @@ mod_recruitment2_server <- function(input, output, session, data.randomized){
   output$recruittable <- gt::render_gt({
     gt::gt(accrualPlot::accrual_table(acc(), unit = "month", format_table_date = "%b %Y")) %>%
       gt::tab_options(column_labels.hidden = TRUE)
+  })
+
+  # recruitment targets
+  targets <- locations %>%
+    dplyr::filter(centre.short %in% names(acc2))
+
+  tmp <- lapply(seq_along(acc2), function(x){
+      acc2 %>%
+        "[["(x) %>%
+        # number this month
+        # dplyr::filter(Date >= Sys.Date() - 30.4) %>%
+        dplyr::filter(Date >= as.Date('2022/03/01') - 30.4) %>%
+        dplyr::summarize(n = sum(Freq)) %>%
+        dplyr::mutate(centre.short = names(acc2)[x])
+        # names()
+      }) %>%
+      dplyr::bind_rows() %>%
+      # add in the target
+      dplyr::left_join(dplyr::bind_rows(targets,
+                                        # overall target is the sum of all
+                                        targets %>%
+                                          dplyr::summarize(monthly = sum(monthly)) %>%
+                                          dplyr::mutate(centre.short = "Overall"))) %>%
+      dplyr::mutate(colour = dplyr::case_when(n / monthly < 0.5 ~ "red",
+                                              n / monthly < 1 ~ "orange",
+                                              TRUE ~ "green"))
+
+  output$targetsUI <- renderUI({
+    fluidRow(
+      lapply(1:nrow(tmp), function(x){
+        uiname <- paste0("target_", x)
+        message(x)
+        # output[[uiname]] <- renderInfoBox(
+        infoBox(title = tmp$centre.short[x],
+                value = paste0(tmp$n, " / ", tmp$monthly)[x],
+                color = tmp$colour[x],
+                icon = shiny::icon('bullseye'),
+                fill = TRUE)
+        # )
+      })
+    )
   })
 
 }
