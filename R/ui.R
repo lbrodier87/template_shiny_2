@@ -42,6 +42,9 @@ app_ui <- function() {
                               '))),
 
                       sidebarMenu(
+                        ## Home
+                        menuItem("Home", tabName = mod$home, icon = icon("home")),
+
                         ## Overview tab
                         menuItem("Performance measures", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
@@ -80,6 +83,7 @@ app_ui <- function() {
                       tabItems(
 
                         ## Recruitment tab
+                        mod_home_ui(mod$home, label = mod$home),
                         mod_recruitment_ui(mod$recruit, label = mod$recruit),
                         mod_recruitment2_ui(mod$recruit2, label = mod$recruit2),
                         mod_recruitment_map_ui(mod$recruitmap, label = mod$recruitmap)

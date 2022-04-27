@@ -6,7 +6,7 @@
 #'
 #' @importFrom shiny NS tagList
 
-mod_skeleton_ui <- function(id, label){
+mod_home_ui <- function(id, label){
 
   ns <- NS(id)
 
@@ -18,7 +18,7 @@ mod_skeleton_ui <- function(id, label){
 #' Server Function
 #' @rdname
 
-mod_skeleton_server <- function(input, output, session){
+mod_home_server <- function(input, output, session){
 
   ns <- session$ns
 

@@ -13,7 +13,7 @@ app_server <- function(input, output, session ) {
   rx.data <- get_reactive_data(input = input)
   data <- get_data()
 
-  ## Recruitment tab
+  callModule(mod_home_server, mod$home)
   callModule(mod_recruitment_server, mod$recruit,
              data.randomized = rx.data$rx_random)
   callModule(mod_recruitment2_server, mod$recruit2,
