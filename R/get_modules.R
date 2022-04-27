@@ -9,6 +9,7 @@
 get_modules <- function(){
   # a list of all module names
   mod <- list(
+    home = "mod_home",
     ## Performance measures
     recruit = "mod_recruit",
     recruit2 = "mod_recruit2",
