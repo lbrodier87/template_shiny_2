@@ -94,6 +94,27 @@ Aspects of study management can also be depicted via Shiny.
         example of how the annual safety report can be produced (via the
         `SwissASR` package)
 
+### Extending the app
+
+For example, let's add a module called "Home" to the app. 
+
+1. Copy and rename the file mod_skeleton.R. 
+
+```r
+file.copy("R/mod_skeleton.R", "R/mod_home.R")
+```
+
+2. Adapt the file "R/mod_home.R" by renaming the UI and server functions and adding content.
+
+3. Create a module alias by adding the line 'home = "mod_home",' to R/get_modules.R. 
+
+4. Add the line 'menuItem("Home", tabName = mod$home, icon = icon("home")),' to R/ui.R within sidebarMenu().                                          Icons of choice can be selected from https://fontawesome.com/icons and https://getbootstrap.com/docs/3.3/components/#glyphicons.
+
+5. Add the line 'mod_home_ui(mod$home, label = mod$home),' to R/ui.R within dashboardBody().
+
+6. Add the line 'callModule(mod_home_server, mod$home)' to R/server.R within app_server().
+
+
 ### Using data
 
 ***THIS SECTION IS UNDER DEVELOPMENT***
