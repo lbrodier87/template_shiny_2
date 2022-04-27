@@ -33,7 +33,7 @@ mod_recruitment_ui <- function(id, label){
 
                   ")),
 
-          ## just testing
+
           fluidRow(
             tags$style(".small-box.bg-yellow { background-color: #a5d7d2 !important; color: #333333 !important; }"),
             tags$style(".small-box.bg-red { background-color: #d20537 !important; color: #333333 !important; }"),
