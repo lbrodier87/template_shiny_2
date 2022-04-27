@@ -7,7 +7,14 @@
 \usage{
 mod_recruitment2_ui(id, label)
 
-mod_recruitment2_server(input, output, session, data.randomized)
+mod_recruitment2_server(
+  input,
+  output,
+  session,
+  data.randomized,
+  locations,
+  all_data
+)
 }
 \arguments{
 \item{id, input, output, session, label}{Internal parameters for {shiny}.}

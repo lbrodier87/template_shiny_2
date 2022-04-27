@@ -11,7 +11,8 @@ mod_home_ui <- function(id, label){
   ns <- NS(id)
 
   tabItem(tabName = label,
-
+          h3("About"),
+          h2("This is a template shiny app that can be used for clinical trials and research")
   )
 }
 
