@@ -31,7 +31,9 @@ mod_sae_ui <- function(id, label){
                                         choices = c("None", "Severity level", "Outcome", "Causality", 
                                                     "Expectedness", "Death", "Life threatening", "Persistant disability", 
                                                     "Hospitalization", "Congenital anomaly / birth defect"), 
-                                        label = "Select SAE characteristics to display: "),
+                                        label = "Select SAE characteristics to display as color: "),
+                            #"add filters with code generated choices",
+                            #Check order of levels on selection! 
                             plotlyOutput(ns("sae_plot_3"))
                             )
               )
