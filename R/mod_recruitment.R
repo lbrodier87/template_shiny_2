@@ -47,7 +47,7 @@ mod_recruitment_ui <- function(id, label){
               title = "",
               id = "tabset1", height = "850px",
               selected = "Recruitment over time by center",
-              tabPanel("Recruitment over time by center",plotlyOutput(ns('recruitplot'), height = "750"))
+              tabPanel("Recruitment over time by center", plotlyOutput(ns('recruitplot'), height = "750"))
 
             )
           )
