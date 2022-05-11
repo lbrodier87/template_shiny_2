@@ -16,6 +16,7 @@ get_data <- function(){
   library(lubridate)
   library(janitor)
   library(tables)
+  library(missMethods)
 
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
@@ -33,6 +34,19 @@ get_data <- function(){
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
                           monthly = c(2,1,2,1,5))
+  
+  ## TODO: delete
+  set.seed(28991)
+  missing <- tibble(
+    age = rnorm(1000, 40, 10),
+    gender = sample(c("m", "f"), 1000, replace = TRUE),
+    weight = ifelse(
+      gender == "m",
+      70 + rnorm(1, 0, 20),
+      60 + rnorm(1, 0, 15)
+    )
+  ) %>%
+    missMethods::delete_MCAR(.2) 
 
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
@@ -41,7 +55,8 @@ get_data <- function(){
   data <- list(
     data.extraction.date = data.extraction.date,
     randomized = randomized,
-    locations = locations
+    locations = locations,
+    missing = missing
   )
 
   return(data)
