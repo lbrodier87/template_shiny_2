@@ -38,7 +38,7 @@ get_data <- function(){
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
                     severity_level = sample(c("Mild", "Moderate", "Severe"), 50, replace = T), 
                     causality = sample(c("Certain", "Probable", "Possible", "Unlikely", "Not related", "Not assessable"), 50, replace = T), 
-                    expectedness = sample(c("Expected", "Unexpcted"), 50, replace = T), 
+                    expectedness = sample(c("Expected", "Unexpected"), 50, replace = T), 
                     outcome = sample(c("Resolved without sequelae", "Resolved with sequelae", "Ongoing", "Death", "Unknown", "Other"), 50, replace = T), 
                     death = sample(c("Yes", "No"), 50, T), 
                     life_threatening = sample(c("Yes", "No"), 50, T),
