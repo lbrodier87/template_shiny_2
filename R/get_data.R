@@ -16,6 +16,7 @@ get_data <- function(){
   library(lubridate)
   library(janitor)
   library(tables)
+  library(missMethods)
 
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
@@ -46,8 +47,20 @@ get_data <- function(){
                     hospitalization = sample(c("Yes", "No"), 50, T),
                     congenital_anomyla_birth_defect = sample(c("Yes", "No"), 50, T))
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})
-  
-  
+   
+  ## TODO: delete
+  set.seed(28991)
+  missing <- tibble(
+    age = rnorm(1000, 40, 10),
+    gender = sample(c("m", "f"), 1000, replace = TRUE),
+    weight = ifelse(
+      gender == "m",
+      70 + rnorm(1, 0, 20),
+      60 + rnorm(1, 0, 15)
+    )
+  ) %>%
+    missMethods::delete_MCAR(.2) 
+
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
   #######################################################################################################################
@@ -57,6 +70,7 @@ get_data <- function(){
     randomized = randomized,
     locations = locations,
     sae = sae
+    missing = missing
   )
 
   return(data)

@@ -24,7 +24,7 @@ app_server <- function(input, output, session ) {
   callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
              data = data$randomized)
   callModule(mod_retention_server, mod$retention, data)
-  callModule(mod_completeness_server, mod$completeness, data)
+  callModule(mod_completeness_server, mod$completeness, data = data$missing)
   callModule(mod_consistency_server, mod$consistency, data)
   callModule(mod_timeliness_server, mod$timeliness, data)
   callModule(mod_queries_server, mod$queries, data)
