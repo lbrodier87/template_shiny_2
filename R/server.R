@@ -30,7 +30,7 @@ app_server <- function(input, output, session ) {
   callModule(mod_queries_server, mod$queries, data)
   callModule(mod_visits_server, mod$visits, data)
   callModule(mod_participant_server, mod$participant, data)
-  callModule(mod_sae_server, mod$sae, data)
+  callModule(mod_sae_server, mod$sae, data$sae)
   callModule(mod_ae_server, mod$ae, data)
   callModule(mod_asr_server, mod$asr, data)
 
