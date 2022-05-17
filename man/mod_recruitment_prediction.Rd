@@ -7,7 +7,15 @@
 \usage{
 mod_recruitment_prediction_ui(id, label)
 
-mod_recruitment_prediction_server(input, output, session, data)
+mod_recruitment_prediction_server(
+  input,
+  output,
+  session,
+  data.randomized,
+  locations,
+  study_params,
+  all_data
+)
 }
 \arguments{
 \item{id}{standard shiny id argument}
@@ -20,7 +28,13 @@ mod_recruitment_prediction_server(input, output, session, data)
 
 \item{session}{standard shiny session argument}
 
-\item{data}{data for use in calculations}
+\item{data.randomized}{reactive data containing randomization info}
+
+\item{locations}{parameters on site level}
+
+\item{study_params}{general study parameter}
+
+\item{all_data}{non reactive data}
 }
 \description{
 Predicts when a trial will reach it's target recruitment, based on recruitment to date
