@@ -33,7 +33,11 @@ get_data <- function(){
   locations <- data.frame(centre.short = LETTERS[1:5],
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
-                          monthly = c(2,1,2,1,5))
+                          monthly = c(2,1,2,1,5),
+                          target = c(35, 25, 20, 40, 30))
+  
+  study_params <- data.frame(acc_target = 150,
+                            study_start = as.Date('2017/12/01'))
   
   sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
@@ -69,7 +73,8 @@ get_data <- function(){
     data.extraction.date = data.extraction.date,
     randomized = randomized,
     locations = locations,
-    sae = sae
+    study_params = study_params,
+    sae = sae,
     missing = missing
   )
 
