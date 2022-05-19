@@ -60,11 +60,14 @@ mod_queries_server <- function(input, output, session, data){
   ## Generate list of queries
   ls.queries <- reactive({
     
-    nr.rows <- data() %>% nrow()
-    df <- purrr::map_dfr(1:nr.rows, get_queries, df = data())
+    nr.rows <- rando %>% nrow()
+    df <- purrr::map_dfr(1:nr.rows, get_queries, df = rando)
     no <- df %>% nrow()
     set.seed(12481498)
-    df %<>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)))
+    df %<>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)),
+                   queryform = sample(c("Adverse events", "Diagnosis", "Biobanking", "MRI", "Laboratory"), no, replace = TRUE, prob = c(0.2, 0.2, 0.2, 0.2, 0.2)),
+                   query = sample(c("Date:Please enter a date", "Date:Event date is greater than current date", "Description: Value required"), no, replace = TRUE, prob = c(0.5, 0.3, 0.2))) %>% 
+      separate(query, c("query.field", "query"), sep = ":")
     return(df)
     
   })
@@ -144,9 +147,9 @@ mod_queries_server <- function(input, output, session, data){
              link = createLink(link)) %>%
       arrange(centre.short) %>% 
       ungroup() %>% 
-      dplyr::select("Center" = centre.short, Visit, "Query status" = querystatus, "Link to secuTrial" = link) 
+      dplyr::select("Center" = centre.short, Visit, "Form" = queryform, "Field" = query.field, "Query" = query, "Status" = querystatus,  "Link to secuTrial" = link) 
     
-  }, escape = FALSE)
+  }, filter = "top", rownames = FALSE, escape = FALSE)
   
   output$openquerytable <- renderDT({
 
@@ -159,8 +162,10 @@ mod_queries_server <- function(input, output, session, data){
              link = createLink(link)) %>%
       arrange(centre.short) %>% 
       ungroup() %>% 
-      dplyr::select("Center" = centre.short, Visit, "Query status" = querystatus, "Link to secuTrial" = link) 
+      dplyr::select("Center" = centre.short, Visit, "Form" = queryform, "Field" = query.field, "Query" = query, "Status" = querystatus, "Link to secuTrial" = link) 
 
-  }, escape = FALSE)
+    # datatable(df, rownames = FALSE, filter = "top")
+    
+  }, filter = "top", rownames = FALSE, escape = FALSE)
 
 }
