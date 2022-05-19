@@ -6,7 +6,7 @@
 #' @param label standard shiny label argument
 #' 
 #' @author Laurent Brodier
-#' @import ggplot
+#' @import ggplot2
 #' @import plotly
 #' 
 
@@ -155,9 +155,9 @@ mod_sae_server <- function(input, output, session, data.sae){
     if(!is.null(f)){
       a <- aggregate(data = d, as.formula(paste0(record_id, " ~ ", center, "*", f)), length)
       p <- ggplot(data = NULL, aes(x=a[,center], y=a[,record_id], fill=a[,f])) + 
-        geom_col(aes(text=paste("Center:", a[,center], 
-                                "<br>Outcome:", a[,f],
-                                "<br>SAE count:", a[,record_id]))) + 
+        geom_col(aes(text=paste0("Center: ", a[,center], 
+                                "<br>", input$sae_fact_sel, ": ", a[,f],
+                                "<br>SAE count: ", a[,record_id]))) + 
         theme_bw() + labs(x = "Center", y="SAE count", fill=input$sae_fact_sel)
       plotly::ggplotly(p, tooltip="text")
     }else{
