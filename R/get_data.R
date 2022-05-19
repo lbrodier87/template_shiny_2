@@ -64,6 +64,37 @@ get_data <- function(){
     )
   ) %>%
     missMethods::delete_MCAR(.2) 
+ 
+  consistency <- randomized %>% 
+    mutate(height = rnorm(nrow(randomized), 170, 30),
+           weight = rnorm(nrow(randomized), 70, 30),
+           sex = sample(c("male", "female", "unknown"), nrow(randomized), 
+                        replace = TRUE),
+           department = sample(c("ICU", "icu", "Icu", "Ic", "Oncology", 
+                                 "oncology", "ONcology", "Onco", "ncology"), 
+                               nrow(randomized), 
+                               replace = TRUE),
+           diagnosis = paste0(sample(c("This patient has",
+                                            paste0(rep("some long text", 20), collapse = " "),
+                                            paste0(rep("some shorter text", 5), collapse = " ")),
+                                            nrow(randomized), replace = TRUE),
+                              sample(c(" high blood pressure ",
+                                       " low blood pressure ",
+                                       " lung cancer ",
+                                       " breast cancer ",
+                                       " fever ",
+                                       " an S.aureus infection ",
+                                       " an S. aureus infection",
+                                       " an E.-Coli infection ",
+                                       " an E coli infection "), 
+                                     nrow(randomized), replace = TRUE),
+                              sample(c(".",
+                                       paste0(rep("some long text", 20), collapse = " "),
+                                       paste0(rep("some shorter text", 5), collapse = " ")),
+                                     nrow(randomized), replace = TRUE)
+                              )
+           )
+  
 
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
@@ -75,7 +106,8 @@ get_data <- function(){
     locations = locations,
     study_params = study_params,
     sae = sae,
-    missing = missing
+    missing = missing,
+    consistency = consistency
   )
 
   return(data)
