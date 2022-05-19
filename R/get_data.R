@@ -16,6 +16,7 @@ get_data <- function(){
   library(lubridate)
   library(janitor)
   library(tables)
+  library(missMethods)
 
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
@@ -32,7 +33,11 @@ get_data <- function(){
   locations <- data.frame(centre.short = LETTERS[1:5],
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
-                          monthly = c(2,1,2,1,5))
+                          monthly = c(2,1,2,1,5),
+                          target = c(35, 25, 30, 30, 30))
+  
+  study_params <- data.frame(acc_target = 150,
+                            study_start = as.Date('2017/12/01'))
   
   sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
@@ -46,8 +51,20 @@ get_data <- function(){
                     hospitalization = sample(c("Yes", "No"), 50, T),
                     congenital_anomyla_birth_defect = sample(c("Yes", "No"), 50, T))
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})
-  
-  
+   
+  ## TODO: delete
+  set.seed(28991)
+  missing <- tibble(
+    age = rnorm(1000, 40, 10),
+    gender = sample(c("m", "f"), 1000, replace = TRUE),
+    weight = ifelse(
+      gender == "m",
+      70 + rnorm(1, 0, 20),
+      60 + rnorm(1, 0, 15)
+    )
+  ) %>%
+    missMethods::delete_MCAR(.2) 
+
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
   #######################################################################################################################
@@ -56,7 +73,9 @@ get_data <- function(){
     data.extraction.date = data.extraction.date,
     randomized = randomized,
     locations = locations,
-    sae = sae
+    study_params = study_params,
+    sae = sae,
+    missing = missing
   )
 
   return(data)
