@@ -35,18 +35,15 @@ get_data <- function(){
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
                           monthly = c(2,1,2,1,5))
   
-  ## TODO: delete
-  set.seed(28991)
-  missing <- tibble(
-    age = rnorm(1000, 40, 10),
-    gender = sample(c("m", "f"), 1000, replace = TRUE),
-    weight = ifelse(
-      gender == "m",
-      70 + rnorm(1, 0, 20),
-      60 + rnorm(1, 0, 15)
-    )
-  ) %>%
-    missMethods::delete_MCAR(.2) 
+  ## read secuTrial test data to illustrate the completeness module
+  st_data = system.file("extdata/sT_exports/exp_opt/s_export_CSV-xls_CTU05_all_info.zip",
+              package = "secuTrialR") %>%
+    read_secuTrial() %>%
+    magrittr::extract(c(
+      "esurgeries", "baseline", "outcome", "treatment", "allmedi", "studyterminat", "ae", "sae"
+    )) %>%
+    purrr::map(tibble) %>%
+    purrr::map(~ .x %>% select(-contains(".factor")))
 
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
@@ -56,8 +53,8 @@ get_data <- function(){
     data.extraction.date = data.extraction.date,
     randomized = randomized,
     locations = locations,
-    missing = missing
-  )
+    st_data = st_data
+    )
 
   return(data)
 }
