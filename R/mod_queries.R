@@ -6,6 +6,7 @@
 #' @param label standard shiny label argument#' 
 #' @importFrom ggpubr
 #' @importFrom DT
+#' @author Suvitha Subramaniam
 
 mod_queries_ui <- function(id, label){
   ns <- NS(id)
