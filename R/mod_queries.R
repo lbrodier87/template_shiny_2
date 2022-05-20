@@ -53,25 +53,10 @@ mod_queries_ui <- function(id, label){
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data data for use in calculations
-mod_queries_server <- function(input, output, session, data){
+mod_queries_server <- function(input, output, session, ls.queries){
 
   links <- get_links()
-  
-  ## Generate list of queries
-  ls.queries <- reactive({
-    
-    nr.rows <- rando %>% nrow()
-    df <- purrr::map_dfr(1:nr.rows, get_queries, df = rando)
-    no <- df %>% nrow()
-    set.seed(12481498)
-    df %<>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)),
-                   queryform = sample(c("Adverse events", "Diagnosis", "Biobanking", "MRI", "Laboratory"), no, replace = TRUE, prob = c(0.2, 0.2, 0.2, 0.2, 0.2)),
-                   query = sample(c("Date:Please enter a date", "Date:Event date is greater than current date", "Description: Value required"), no, replace = TRUE, prob = c(0.5, 0.3, 0.2))) %>% 
-      separate(query, c("query.field", "query"), sep = ":")
-    return(df)
-    
-  })
-  
+
   ## No.of total queries
   output$nrtotalqr <- renderValueBox({
     no <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
