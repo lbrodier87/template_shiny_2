@@ -124,9 +124,15 @@ mod_sae_server <- function(input, output, session, data.sae){
       d$cumul[d[,center]==c] <- seq_along(d$cumul[d[,center]==c])
     }
     
+    #get total SAE nb by center in data frame, to add in center label on plot
+    m <- aggregate(data = d, as.formula(paste0("cumul ~ ", center)), max)
+    names(m)[2] <- "tot"
+    d <- merge(x = d, y = m, by = center, all.x = T)
+    d <- d[order(d[,sae_date]),]
+    
     #do the plot (+add custom label to hover text as points)
-    p <- ggplot() +  geom_line(aes(x=d[,sae_date], y=d$cumul, color=d[,center])) + 
-      geom_point(aes(x=d[,sae_date], y=d$cumul, color=d[,center], 
+    p <- ggplot() +  geom_line(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")") )) + 
+      geom_point(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")"), 
                     text=paste('SAE date: ', d[,sae_date],
                                '<br>Center:', d[,center],
                                '<br>SAE count:', d$cumul)), size=0.5) + 
