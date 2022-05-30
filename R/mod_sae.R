@@ -8,7 +8,7 @@
 #' @author Laurent Brodier
 #' @import ggplot2
 #' @import plotly
-#' 
+#' @import reshape2
 
 # tmp list of choices for SAE characteristics... 
 # (next will get them directly from the dataset in server code)
