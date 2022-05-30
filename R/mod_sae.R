@@ -6,7 +6,7 @@
 #' @param label standard shiny label argument
 #' 
 #' @author Laurent Brodier
-#' @import ggplot
+#' @import ggplot2
 #' @import plotly
 #' 
 
@@ -124,9 +124,15 @@ mod_sae_server <- function(input, output, session, data.sae){
       d$cumul[d[,center]==c] <- seq_along(d$cumul[d[,center]==c])
     }
     
+    #get total SAE nb by center in data frame, to add in center label on plot
+    m <- aggregate(data = d, as.formula(paste0("cumul ~ ", center)), max)
+    names(m)[2] <- "tot"
+    d <- merge(x = d, y = m, by = center, all.x = T)
+    d <- d[order(d[,sae_date]),]
+    
     #do the plot (+add custom label to hover text as points)
-    p <- ggplot() +  geom_line(aes(x=d[,sae_date], y=d$cumul, color=d[,center])) + 
-      geom_point(aes(x=d[,sae_date], y=d$cumul, color=d[,center], 
+    p <- ggplot() +  geom_line(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")") )) + 
+      geom_point(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")"), 
                     text=paste('SAE date: ', d[,sae_date],
                                '<br>Center:', d[,center],
                                '<br>SAE count:', d$cumul)), size=0.5) + 
@@ -155,9 +161,9 @@ mod_sae_server <- function(input, output, session, data.sae){
     if(!is.null(f)){
       a <- aggregate(data = d, as.formula(paste0(record_id, " ~ ", center, "*", f)), length)
       p <- ggplot(data = NULL, aes(x=a[,center], y=a[,record_id], fill=a[,f])) + 
-        geom_col(aes(text=paste("Center:", a[,center], 
-                                "<br>Outcome:", a[,f],
-                                "<br>SAE count:", a[,record_id]))) + 
+        geom_col(aes(text=paste0("Center: ", a[,center], 
+                                "<br>", input$sae_fact_sel, ": ", a[,f],
+                                "<br>SAE count: ", a[,record_id]))) + 
         theme_bw() + labs(x = "Center", y="SAE count", fill=input$sae_fact_sel)
       plotly::ggplotly(p, tooltip="text")
     }else{

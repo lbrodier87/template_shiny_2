@@ -70,8 +70,14 @@ quality.
         data consistency might be shown
     -   **Timeliness** `mod_timeliness` provides an example of how time
         between events and their entry into the database might be shown
-    -   **Queries** `mod_queries` provides an example of how queries
-        might be shown
+    -   **Queries** `mod_queries` provides an example of how queries may be 
+        displayed in terms of their total count and status. Queries are 
+        labelled as "open", "answered" and "resolved". "open" queries are
+        queries which have still to be answered by the centers, "answered" 
+        queries have been addressed by the centers and "resolved" queries 
+        are "answered" queries which are closed by the clinical monitors. 
+        "open" and "answered" queries are listed in a table with links to 
+        secuTrial database for easy access. 
 
 #### Study management
 
