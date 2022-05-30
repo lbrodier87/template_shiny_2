@@ -162,6 +162,7 @@ get_data <- function(){
   study_params <- data.frame(acc_target = 150,
                             study_start = as.Date('2017/12/01'))
   
+  sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
   sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
                     severity_level = sample(c("Mild", "Moderate", "Severe"), 50, replace = T), 
@@ -172,9 +173,11 @@ get_data <- function(){
                     life_threatening = sample(c("Yes", "No"), 50, T),
                     persistant_disability = sample(c("Yes", "No"), 50, T),
                     hospitalization = sample(c("Yes", "No"), 50, T),
-                    congenital_anomyla_birth_defect = sample(c("Yes", "No"), 50, T))
+                    congenital_anomyla_birth_defect = sample(c("Yes", "No"), 50, T), 
+                    sae_report_type = sample(c("Initial", "Follow-up", "Final"), 50, replace = T), 
+                    sae_description = sample(sae_descr, 50, replace = T)) #?
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})
-   
+  
   ## TODO: delete
   set.seed(28991)
   missing <- tibble(

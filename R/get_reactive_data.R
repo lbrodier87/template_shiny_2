@@ -35,13 +35,22 @@ get_reactive_data <- function(input){
   #   } else{
   #     filter(data$missing, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
   #   })
-
+  
+  sae_period <- reactive(
+    if(input$center != "All"){
+      filter(data$sae, centre.short == input$center & sae_date >= input$period[1] & sae_date <= input$period[2])
+      
+    } else{
+      filter(data$sae, sae_date >= input$period[1] & sae_date <= input$period[2])
+    }
+  )
 
   ## Save reactive datafranes into list
 
   reactive_data <- list(
     rx_random = random_period,
-    rx_all = all_period
+    rx_all = all_period,
+    rx_sae = sae_period
     # , rx_missing = missing_period
   )
 

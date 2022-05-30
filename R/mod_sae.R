@@ -48,12 +48,12 @@ mod_sae_ui <- function(id, label){
                   
                    tabPanel("SAE occurence", 
                             "Cummulative SAE occurence overtime:",
-                            plotlyOutput(ns("sae_plot_1"))
-                            ),
-                   tabPanel("SAE occurence by center",
+                            plotlyOutput(ns("sae_plot_1")), 
                             "Cummulative SAE occurence overtime by center:",
-                           plotlyOutput(ns("sae_plot_2"))
-                           ), 
+                            plotlyOutput(ns("sae_plot_2")), 
+                            "Table count...", 
+                            tableOutput(ns("sae_table"))
+                            ),
                    tabPanel("SAE number by characteristics", 
                             "SAE number by center and by characteristics: ", 
                             selectInput(ns("sae_fact_sel"), 
@@ -86,10 +86,12 @@ mod_sae_server <- function(input, output, session, data.sae){
   record_id <- "pat_id"
   center <- "centre.short"
   sae_date <- "sae_date"
+  sae_report_type <- "sae_report_type"
 
   #filtered data based on SAE characteristics, used in plots below
   data.sae.filtered <- reactive({
-    d <- data.sae[data.sae$severity_level %in% input$sae_filter_severity,]
+    d <- data.sae()
+    d <- d[d$severity_level %in% input$sae_filter_severity,]
     d <- d[d$outcome %in% input$sae_filter_outcome,]
     d <- d[d$causality %in% input$sae_filter_causality,]
     d <- d[d$expectedness %in%  input$sae_filter_expectedness,]
@@ -181,4 +183,16 @@ mod_sae_server <- function(input, output, session, data.sae){
     data.sae.filtered()[order(data.sae.filtered()[,sae_date]),]
   })
 
+  # Data Table of SAE count aggregate
+  output$sae_table <- renderTable({
+    sae_table <- aggregate(data = data.sae.filtered(), as.formula(paste0(record_id, "~", sae_report_type, "*", center)), length)
+    sae_table <- reshape2::dcast(sae_table, formula = centre.short ~ sae_report_type)
+    sae_sum <- apply(sae_table[,2:4], 2, sum)
+    sae_table <- rbind(c("All", sae_sum), sae_table)
+    sae_table <- sae_table[, c(1, 4:2)]
+    names(sae_table)[1] <- "Center"
+    sae_table$Total <- apply(sae_table[,2:4], 1, function(x){as.character(sum(as.numeric(x)))})
+    sae_table
+  })
+  
 }
