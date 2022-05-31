@@ -22,15 +22,18 @@ app_server <- function(input, output, session ) {
   callModule(mod_recruitment_map_server, mod$recruitmap,
              dat = rx.data$rx_random, locations = data$locations)
   callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
-             data = data$randomized)
+             data.randomized = rx.data$rx_random, 
+             locations = data$locations, 
+             study_params = data$study_params,
+             all_data = data$randomized)
   callModule(mod_retention_server, mod$retention, data)
   callModule(mod_completeness_server, mod$completeness, data_form = rx.data$rx_form)
   callModule(mod_consistency_server, mod$consistency, data)
   callModule(mod_timeliness_server, mod$timeliness, data)
-  callModule(mod_queries_server, mod$queries, data)
+  callModule(mod_queries_server, mod$queries, data = rx.data$rx_all)
   callModule(mod_visits_server, mod$visits, data)
   callModule(mod_participant_server, mod$participant, data)
-  callModule(mod_sae_server, mod$sae, data)
+  callModule(mod_sae_server, mod$sae, data$sae)
   callModule(mod_ae_server, mod$ae, data)
   callModule(mod_asr_server, mod$asr, data)
 
