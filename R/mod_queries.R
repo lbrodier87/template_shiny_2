@@ -4,8 +4,8 @@
 #' @rdname mod_queries
 #' @param id standard shiny id argument
 #' @param label standard shiny label argument#' 
-#' @importFrom ggpubr
-#' @importFrom DT
+#' @import ggpubr
+#' @import DT
 #' @author Suvitha Subramaniam
 
 mod_queries_ui <- function(id, label){
