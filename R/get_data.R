@@ -173,7 +173,7 @@ get_data <- function(){
                     life_threatening = sample(c("Yes", "No"), 50, T),
                     persistant_disability = sample(c("Yes", "No"), 50, T),
                     hospitalization = sample(c("Yes", "No"), 50, T),
-                    congenital_anomyla_birth_defect = sample(c("Yes", "No"), 50, T), 
+                    congenital_anomalia_birth_defect = sample(c("Yes", "No"), 50, T), 
                     sae_report_type = sample(c("Initial", "Follow-up", "Final"), 50, replace = T), 
                     sae_description = sample(sae_descr, 50, replace = T)) #?
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})

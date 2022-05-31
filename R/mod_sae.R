@@ -9,64 +9,56 @@
 #' @import ggplot2
 #' @import plotly
 #' @import reshape2
-
-# tmp list of choices for SAE characteristics... 
-# (next will get them directly from the dataset in server code)
-sae_severity_list <- c("Mild", "Moderate", "Severe")
-sae_outcome_list <- c("Resolved without sequelae", "Resolved with sequelae", "Ongoing", "Death", "Other", "Unknown")
-sae_causality_list <- c("Certain", "Probable", "Possible", "Unlikely", "Not related", "Not assessable")
-sae_expectedness_list <- c("Expected", "Unexpected")
-
 mod_sae_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
           fluidRow(
             # SAE filters (for all tabs)
             box(width = 12,
-              #TODO:populate list from server side, based on dataset content
+              #Filters choices are generated on server side, based on dataset content
               fluidRow( 
-                column(3, selectInput(ns("sae_filter_severity"), label = "Filter by severity", 
-                            choices = sae_severity_list, multiple = T, 
-                            selected = sae_severity_list)), 
-                column(3, selectInput(ns("sae_filter_outcome"), label = "Filter by outcome", 
-                                      choices = sae_outcome_list, multiple = T, 
-                                      selected = sae_outcome_list)),
-                column(3, selectInput(ns("sae_filter_causality"), label = "Filter by causality", 
-                                      choices = sae_causality_list, multiple = T, 
-                                      selected = sae_causality_list)),
-                column(3, selectInput(ns("sae_filter_expectedness"), label = "Filter by expectedness", 
-                                      choices = sae_expectedness_list, multiple = T, 
-                                      selected = sae_expectedness_list))
+                column(4, uiOutput(ns("sae_filter_report_type_ui"))), 
+                column(4, uiOutput(ns("sae_filter_severity_ui"))),
+                column(4, uiOutput(ns("sae_filter_expectedness_ui")))
+              ),
+              fluidRow( 
+                column(6, uiOutput(ns("sae_filter_outcome_ui"))), 
+                column(6, uiOutput(ns("sae_filter_causality_ui")))
               )
             ),
             
-            # Tabs
+            # Tabs with plots
             tabBox(width = 12,
                    title = "",
                    id = "tabset2",
-                   height = "450px",
                   
-                   tabPanel("SAE occurence", 
-                            "Cummulative SAE occurence overtime:",
+                   tabPanel("SAE occurence overtime", 
+                            h2("Cummulative SAE occurence overtime:"),
                             plotlyOutput(ns("sae_plot_1")), 
-                            "Cummulative SAE occurence overtime by center:",
-                            plotlyOutput(ns("sae_plot_2")), 
-                            "Table count...", 
-                            tableOutput(ns("sae_table"))
+                            br(),
+                            h2("Cummulative SAE occurence overtime by center:"),
+                            plotlyOutput(ns("sae_plot_2"))
                             ),
                    tabPanel("SAE number by characteristics", 
-                            "SAE number by center and by characteristics: ", 
-                            selectInput(ns("sae_fact_sel"), 
-                                        choices = c("None", "Severity level", "Outcome", "Causality", 
-                                                    "Expectedness", "Death", "Life threatening", "Persistant disability", 
-                                                    "Hospitalization", "Congenital anomaly / birth defect"), 
-                                        label = "SAE characteristics as color: "),
-                            #"add filters with code generated choices",
-                            #Check order of levels on selection! 
-                            plotlyOutput(ns("sae_plot_3"))
+                            h2("SAE number by center and by characteristics: "), 
+                            uiOutput(ns("sae_fact_sel_ui")),
+                            plotlyOutput(ns("sae_plot_3")), 
+                            br(),
+                            h2("SAE count table:"), 
+                            uiOutput(ns("sae_table_detail_var_ui")), 
+                            tableOutput(ns("sae_table")),
                             ), 
                    tabPanel(width=12, "SAE list",
-                            dataTableOutput(ns("sae_table_1"))
+                            h2("SAE list:"),
+                            fluidRow(
+                              column(width = 12, 
+                                     dataTableOutput(ns("sae_table_1"))
+                              )
+                            )
+                   ), 
+                   tabPanel(width=12, "SAE Follow-up",
+                            h2("SAE Follow-up:"),
+                            p("in development...")
                    )
               )
             )
@@ -82,21 +74,27 @@ mod_sae_server <- function(input, output, session, data.sae){
 
   ns <- session$ns
   
-  #varname mapping - to map to your dataset variable names (useful?)
+  # varname mapping - to map to your dataset variable names (useful?)
   record_id <- "pat_id"
   center <- "centre.short"
   sae_date <- "sae_date"
   sae_report_type <- "sae_report_type"
+  severity_level <- "severity_level"
+  expectedness <- "expectedness"
+  causality <- "causality"
+  outcome <- "outcome"
 
-  #filtered data based on SAE characteristics, used in plots below
+  # reactive filtered data based on SAE characteristics, used in plots below
   data.sae.filtered <- reactive({
     d <- data.sae()
-    d <- d[d$severity_level %in% input$sae_filter_severity,]
-    d <- d[d$outcome %in% input$sae_filter_outcome,]
-    d <- d[d$causality %in% input$sae_filter_causality,]
-    d <- d[d$expectedness %in%  input$sae_filter_expectedness,]
+    d <- d[d[,severity_level] %in% input$sae_filter_severity,]
+    d <- d[d[,outcome] %in% input$sae_filter_outcome,]
+    d <- d[d[,causality] %in% input$sae_filter_causality,]
+    d <- d[d[,expectedness] %in%  input$sae_filter_expectedness,]
+    d <- d[d[,sae_report_type] %in% input$sae_filter_report_type,]
     d
   })
+  
   
   ## plot of cumulative SAE number (all centers)
   output$sae_plot_1 <- renderPlotly({
@@ -105,10 +103,11 @@ mod_sae_server <- function(input, output, session, data.sae){
     d$cumul <- seq_along(d[,sae_date]) #get cumulative count of SAE
     a <- aggregate(data = d, as.formula(paste0("cumul ~ ", sae_date)), max) #aggregate max (to acount for >1 SAE on same date)
     #do the plot (+add custom label to hover text as points)
-    p <- ggplot() + geom_line(aes(x=a[,sae_date], y=a$cumul)) + 
+    p <- ggplot() + geom_line(aes(x=a[,sae_date], y=a$cumul, color=paste0("All (n=", max(a$cumul), ")"))) + 
       geom_point(aes(x=a[,sae_date], y=a$cumul, text=paste("SAE date:", a[,sae_date], 
                                                            "<br>SAE count:", a$cumul)), size=0.5) +
-      theme_bw() + labs(x="SAE date", y="SAE cumulative number")
+      theme_bw() + labs(x="SAE date", y="SAE cumulative number", color="Center") + 
+      scale_color_manual(values=c("#000000"))
     #convert to plotly (+specify tooltip)
     plotly::ggplotly(p, tooltip="text")
   })
@@ -177,22 +176,115 @@ mod_sae_server <- function(input, output, session, data.sae){
       plotly::ggplotly(p, tooltip="text")
     }
   })
-  
-  ## DataTable of SAE
+
+  # Data Table of SAE count aggregate
+  output$sae_table <- renderTable({
+    if(input$sae_table_detail_var != "None"){
+      sae_table <- aggregate(data = data.sae.filtered(), as.formula(paste0(record_id, "~", input$sae_table_detail_var, "*", center)), length)
+      sae_table <- reshape2::dcast(sae_table, formula = as.formula(paste0(center, " ~ ", input$sae_table_detail_var)))
+      if( length(unique(sae_table[,center])) > 1 ){
+        sae_sum <- apply(as.data.frame(sae_table[,2:ncol(sae_table)]), 2, function(x){sum(x, na.rm = T)})
+        sae_table <- rbind(c("All", sae_sum), sae_table)
+      }
+      sae_table <- sae_table[, c(1, ncol(sae_table):2)]
+      names(sae_table)[1] <- "Center"
+      if(ncol(sae_table) > 2){
+        sae_table$Total <- apply(sae_table[,2:ncol(sae_table)], 1, function(x){as.character(sum(as.numeric(x), na.rm=T))})
+      }
+    }else{
+      sae_table <- aggregate(data=data.sae.filtered(), as.formula(paste0(record_id, " ~ ", center)), length)
+      names(sae_table) <- c("Center", "Total")
+      if( length(unique(sae_table$Center)) > 1 ){
+        sae_table <- rbind( c("All", as.character(sum(as.numeric(sae_table$Total)))), sae_table )
+      }
+    }
+    sae_table
+  })
+    
+  ## DataTable of all SAE
   output$sae_table_1 <- renderDataTable({
     data.sae.filtered()[order(data.sae.filtered()[,sae_date]),]
   })
 
-  # Data Table of SAE count aggregate
-  output$sae_table <- renderTable({
-    sae_table <- aggregate(data = data.sae.filtered(), as.formula(paste0(record_id, "~", sae_report_type, "*", center)), length)
-    sae_table <- reshape2::dcast(sae_table, formula = centre.short ~ sae_report_type)
-    sae_sum <- apply(sae_table[,2:4], 2, sum)
-    sae_table <- rbind(c("All", sae_sum), sae_table)
-    sae_table <- sae_table[, c(1, 4:2)]
-    names(sae_table)[1] <- "Center"
-    sae_table$Total <- apply(sae_table[,2:4], 1, function(x){as.character(sum(as.numeric(x)))})
-    sae_table
+  ## Dynamic UI code
+  #list of content - report type
+  sae_report_type_list <- reactive({
+    unique(data.sae()[, sae_report_type])
+  })
+  #list of content - SAE severity level
+  severity_level_list <- reactive({
+    unique(data.sae()[, severity_level])
+  })
+  #list of content - SAE expectedness
+  sae_expectedness_list <- reactive({
+    unique(data.sae()[, expectedness])
+  })
+  #list of content - SAE causality
+  sae_causality_list <- reactive({
+    unique(data.sae()[, causality])
+  })
+  #list of content - SAE outcome
+  sae_outcome_list <- reactive({
+    unique(data.sae()[, outcome])
+  })
+  #list of content - SAE variables
+  sae_var_list <- reactive({
+    names(data.sae())[!names(data.sae()) %in% c(record_id, sae_date, center)]
   })
   
+  # Dynamic UI - report type
+  output$sae_filter_report_type_ui <- renderUI({
+    choices <- sae_report_type_list()
+    selectInput(inputId = ns('sae_filter_report_type'),
+                label = "Filter by report type", 
+                choices = choices, multiple = T, 
+                selected = choices)
+  })
+  # Dynamic UI - SAE severity
+  output$sae_filter_severity_ui <- renderUI({
+    choices <- severity_level_list()
+    selectInput(ns("sae_filter_severity"), 
+                label = "Filter by severity", 
+                choices = choices, multiple = T, 
+                selected = choices) 
+  })
+  # Dynamic UI - SAE expectedness
+  output$sae_filter_expectedness_ui <- renderUI({
+    choices <- sae_expectedness_list()
+    selectInput(ns("sae_filter_expectedness"), 
+                label = "Filter by expectedness",  
+                choices = choices, multiple = T, 
+                selected = choices) 
+  })
+  # Dynamic UI - SAE causality
+  output$sae_filter_causality_ui <- renderUI({
+    choices <- sae_causality_list()
+    selectInput(ns("sae_filter_causality"), 
+                label = "Filter by causality",  
+                choices = choices, multiple = T, 
+                selected = choices) 
+  })
+  # Dynamic UI - SAE outcome
+  output$sae_filter_outcome_ui <- renderUI({
+    choices <- sae_outcome_list()
+    selectInput(ns("sae_filter_outcome"), 
+                label = "Filter by outcome",  
+                choices = choices, multiple = T, 
+                selected = choices) 
+  })
+  # Dynamic UI - SAE variables
+  output$sae_table_detail_var_ui <- renderUI({
+    choices <- c("None", sae_var_list())
+    selectInput(ns("sae_table_detail_var"), 
+                label = "Detail by variable",  
+                choices = choices, multiple = F, 
+                selected = "None") 
+  })
+  output$sae_fact_sel_ui <- renderUI({
+    choices <- c("None", sae_var_list())
+    selectInput(ns("sae_fact_sel"), 
+                label = "Detail by variable",  
+                choices = choices, multiple = F, 
+                selected = "None") 
+  })
 }
