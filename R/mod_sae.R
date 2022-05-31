@@ -9,6 +9,7 @@
 #' @import ggplot2
 #' @import plotly
 #' @import reshape2
+#' @import DT
 mod_sae_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
@@ -50,19 +51,15 @@ mod_sae_ui <- function(id, label){
                             ), 
                    tabPanel(width=12, "SAE list",
                             h2("SAE list:"),
-                            fluidRow(
-                              column(width = 12, 
-                                     dataTableOutput(ns("sae_table_1"))
-                              )
-                            )
-                   ), 
+                            div(DT::dataTableOutput(ns("sae_table_1")), style = "font-size: 90%; width: 100%")
+                            ),
                    tabPanel(width=12, "SAE Follow-up",
                             h2("SAE Follow-up:"),
                             p("in development...")
                    )
-              )
             )
           )
+  )
 }
 
 #' @rdname mod_sae
@@ -202,8 +199,10 @@ mod_sae_server <- function(input, output, session, data.sae){
   })
     
   ## DataTable of all SAE
-  output$sae_table_1 <- renderDataTable({
-    data.sae.filtered()[order(data.sae.filtered()[,sae_date]),]
+  output$sae_table_1 <- DT::renderDataTable({
+    DT::datatable(data.sae.filtered()[order(data.sae.filtered()[,sae_date]),], 
+                  rownames = FALSE, 
+                  options = list(scrollX = T, pageLength = 10))
   })
 
   ## Dynamic UI code
