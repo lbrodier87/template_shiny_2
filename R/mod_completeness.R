@@ -1,6 +1,7 @@
 #' Completeness
 #' 
 #' @import naniar
+#' @importFrom waiter autoWaiter
 #'
 #' In development
 #' @rdname mod_completeness
@@ -11,6 +12,7 @@ mod_completeness_ui <- function(id, label){
   tabItem(tabName = label,
           
           fluidRow(
+            autoWaiter(),
             tabBox(width = 12,
                    title = "",
                    id = "tabset2",
