@@ -76,17 +76,6 @@ app_ui <- function() {
                         ## Center filter
                         selectInput("center", "Acute center", choices = c("All", "A", "B", "C", "D", "E"), selected = "All"),
                         
-                        ## Forms filter
-                        selectInput("forms", "Form:", 
-                                    choices = 
-                                      c("esurgeries", 
-                                        "baseline", 
-                                        "outcome",
-                                        "treatment",
-                                        "allmedi",
-                                        "studyterminat",
-                                        "ae", "sae")),
-                        
                         width = "350")),
 
                     ## Body
