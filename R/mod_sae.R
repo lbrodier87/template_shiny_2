@@ -80,10 +80,22 @@ mod_sae_server <- function(input, output, session, data.sae){
   expectedness <- "expectedness"
   causality <- "causality"
   outcome <- "outcome"
+  
+  # SAE variables (factors) to use in selectInput for categories (useful?)
+  sae_vars <- c("severity_level", "causality", "expectedness", "outcome", "death", 
+                "life_threatening", "persistant_disability", "hospitalization", 
+                "congenital_anomyla_birth_defect", "sae_report_type", "centre.short") 
 
   # reactive filtered data based on SAE characteristics, used in plots below
   data.sae.filtered <- reactive({
-    d <- data.sae()
+    #wait for input to be created
+    req(input$sae_filter_severity, 
+            input$sae_filter_outcome, 
+            input$sae_filter_causality, 
+            input$sae_filter_expectedness, 
+            input$sae_filter_report_type, quietly = T) 
+    #filter data based on sae filters
+    d <- data.sae() #get input data
     d <- d[d[,severity_level] %in% input$sae_filter_severity,]
     d <- d[d[,outcome] %in% input$sae_filter_outcome,]
     d <- d[d[,causality] %in% input$sae_filter_causality,]
@@ -95,7 +107,7 @@ mod_sae_server <- function(input, output, session, data.sae){
   
   ## plot of cumulative SAE number (all centers)
   output$sae_plot_1 <- renderPlotly({
-    d <- data.sae.filtered()
+    d <- data.sae.filtered() #get filtered reactive data
     d <- d[order(d[,sae_date]),] #order the SAE by date
     d$cumul <- seq_along(d[,sae_date]) #get cumulative count of SAE
     a <- aggregate(data = d, as.formula(paste0("cumul ~ ", sae_date)), max) #aggregate max (to acount for >1 SAE on same date)
@@ -111,7 +123,7 @@ mod_sae_server <- function(input, output, session, data.sae){
   
   ## plot of cumulative SAE number (color by center)
   output$sae_plot_2 <- renderPlotly({
-    d <- data.sae.filtered()
+    d <- data.sae.filtered() #get filtered reactive data
     #order the SAE by date
     d <- d[order(d[,sae_date]),] 
     
@@ -143,33 +155,28 @@ mod_sae_server <- function(input, output, session, data.sae){
   ## plot SAE barplot, color by sae characteristics
   output$sae_plot_3 <- renderPlotly({
     #get input: what factor to use as color? + map to df col name
+    req(input$sae_fact_sel) #wait for select input
     f <- input$sae_fact_sel
-    if(f=="None") f <- NULL 
-    else if(f=="Severity level") f <- "severity_level"
-    else if(f=="Outcome") f <- "outcome"
-    else if(f=="Causality") f <- "causality"
-    else if(f=="Expectedness") f <- "expectedness"
-    else if(f=="Death") f <- "death"
-    else if(f=="Life threatening") f <- "life_threatening"
-    else if(f=="Persistant disability") f <- "persistant_disability"
-    else if(f=="Hospitalization") f <- "hospitalization"
-    else if(f=="Congenital anomaly / birth defect") f <- "congenital_anomyla_birth_defect"
     
-    d <- data.sae.filtered()
-    if(!is.null(f)){
+    d <- data.sae.filtered() #get filtered reactive data
+    if(f != 'None'){
       a <- aggregate(data = d, as.formula(paste0(record_id, " ~ ", center, "*", f)), length)
-      p <- ggplot(data = NULL, aes(x=a[,center], y=a[,record_id], fill=a[,f])) + 
-        geom_col(aes(text=paste0("Center: ", a[,center], 
-                                "<br>", input$sae_fact_sel, ": ", a[,f],
-                                "<br>SAE count: ", a[,record_id]))) + 
-        theme_bw() + labs(x = "Center", y="SAE count", fill=input$sae_fact_sel)
+      p <- ggplot(data=a, aes(x=get(center), y=get(record_id), fill=get(f))) + 
+        geom_col(aes(text=paste0("Center: ", get(center), 
+                                "<br>", input$sae_fact_sel, ": ", get(f),
+                                "<br>SAE count: ", get(record_id)))) + 
+        theme_bw() + labs(x = "Center", y="SAE count", fill=input$sae_fact_sel) + 
+        geom_text(aes(x=get(center), y=get(record_id), label = paste0("n=", get(record_id)), group=get(f)), 
+                  position = position_stack(vjust = 0.5), color="lightgray", size=3)
       plotly::ggplotly(p, tooltip="text")
     }else{
       a <- aggregate(data = d, as.formula(paste0(record_id, " ~ ", center)), length)
-      p <- ggplot(data = NULL, aes(x=a[,center], y=a[,record_id])) + 
-        geom_col(aes(text=paste("Center:", a[,center], 
-                                 "<br>SAE count:", a[,record_id]))) + 
-        theme_bw() + labs(x = "Center", y="SAE count")
+      p <- ggplot(data=a, aes(x=get(center), y=get(record_id))) + 
+        geom_col(aes(text=paste("Center:", get(center), 
+                                 "<br>SAE count:", get(record_id)))) + 
+        theme_bw() + labs(x = "Center", y="SAE count") + 
+        geom_text(aes(label = paste0("n=", get(record_id)), y = get(record_id) + 0.5), 
+                  color="darkgray", size=3)
       plotly::ggplotly(p, tooltip="text")
     }
   })
@@ -228,7 +235,7 @@ mod_sae_server <- function(input, output, session, data.sae){
   })
   #list of content - SAE variables
   sae_var_list <- reactive({
-    names(data.sae())[!names(data.sae()) %in% c(record_id, sae_date, center)]
+    names(data.sae())[names(data.sae()) %in% sae_vars]
   })
   
   # Dynamic UI - report type
@@ -282,7 +289,7 @@ mod_sae_server <- function(input, output, session, data.sae){
   output$sae_fact_sel_ui <- renderUI({
     choices <- c("None", sae_var_list())
     selectInput(ns("sae_fact_sel"), 
-                label = "Detail by variable",  
+                label = "Color by SAE characteristics:",  
                 choices = choices, multiple = F, 
                 selected = "None") 
   })
