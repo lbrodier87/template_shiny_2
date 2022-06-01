@@ -67,10 +67,11 @@ mod_sae_ui <- function(id, label){
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data.sae data for use in calculations
-mod_sae_server <- function(input, output, session, data.sae){
+mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
 
   ns <- session$ns
   
+  ## Parameters to edit (adapting module to different datasets)
   # varname mapping - to map to your dataset variable names (useful?)
   record_id <- "pat_id"
   center <- "centre.short"
@@ -80,20 +81,20 @@ mod_sae_server <- function(input, output, session, data.sae){
   expectedness <- "expectedness"
   causality <- "causality"
   outcome <- "outcome"
-  
   # SAE variables (factors) to use in selectInput for categories (useful?)
   sae_vars <- c("severity_level", "causality", "expectedness", "outcome", "death", 
                 "life_threatening", "persistant_disability", "hospitalization", 
                 "congenital_anomyla_birth_defect", "sae_report_type", "centre.short") 
 
-  # reactive filtered data based on SAE characteristics, used in plots below
+  
+  ## reactive filtered data based on SAE characteristics, used in plots below
   data.sae.filtered <- reactive({
     #wait for input to be created
     req(input$sae_filter_severity, 
-            input$sae_filter_outcome, 
-            input$sae_filter_causality, 
-            input$sae_filter_expectedness, 
-            input$sae_filter_report_type, quietly = T) 
+        input$sae_filter_outcome, 
+        input$sae_filter_causality, 
+        input$sae_filter_expectedness, 
+        input$sae_filter_report_type, quietly = T) 
     #filter data based on sae filters
     d <- data.sae() #get input data
     d <- d[d[,severity_level] %in% input$sae_filter_severity,]
@@ -212,30 +213,31 @@ mod_sae_server <- function(input, output, session, data.sae){
                   options = list(scrollX = T, pageLength = 10))
   })
 
+  
   ## Dynamic UI code
   #list of content - report type
   sae_report_type_list <- reactive({
-    unique(data.sae()[, sae_report_type])
+    unique(data.sae.static[, sae_report_type])
   })
   #list of content - SAE severity level
   severity_level_list <- reactive({
-    unique(data.sae()[, severity_level])
+    unique(data.sae.static[, severity_level])
   })
   #list of content - SAE expectedness
   sae_expectedness_list <- reactive({
-    unique(data.sae()[, expectedness])
+    unique(data.sae.static[, expectedness])
   })
   #list of content - SAE causality
   sae_causality_list <- reactive({
-    unique(data.sae()[, causality])
+    unique(data.sae.static[, causality])
   })
   #list of content - SAE outcome
   sae_outcome_list <- reactive({
-    unique(data.sae()[, outcome])
+    unique(data.sae.static[, outcome])
   })
   #list of content - SAE variables
   sae_var_list <- reactive({
-    names(data.sae())[names(data.sae()) %in% sae_vars]
+    names(data.sae.static)[names(data.sae.static) %in% sae_vars]
   })
   
   # Dynamic UI - report type
