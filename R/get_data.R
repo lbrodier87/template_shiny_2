@@ -75,6 +75,7 @@ get_visits <- function(df){
 #'
 #' @return
 #' @export
+#' @import dplyr
 #'
 #' @examples
 get_queries <- function(index, df){
@@ -96,6 +97,9 @@ get_queries <- function(index, df){
 #'
 #' @return
 #' @export
+#' @import dplyr
+#' @import tidyr
+#' @import secuTrialR
 #' @importFrom purrr map
 #'
 get_data <- function(){
