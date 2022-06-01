@@ -7,7 +7,7 @@
 \usage{
 mod_completeness_ui(id, label)
 
-mod_completeness_server(input, output, session, data_form)
+mod_completeness_server(input, output, session, data)
 }
 \arguments{
 \item{id}{standard shiny id argument}
