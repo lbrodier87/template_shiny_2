@@ -62,24 +62,28 @@ mod_completeness_ui <- function(id, label){
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data data for use in calculations
-mod_completeness_server <- function(input, output, session, data_form){
+mod_completeness_server <- function(input, output, session, data){
   
   ns <- session$ns
   
+  form_selected <- reactive({
+    return(data[[input$forms]])
+  })
+  
   output$vis_miss <- renderPlotly({
-    data_form() %>% vis_miss %>% ggplotly
+    form_selected() %>% vis_miss %>% ggplotly
   })
   
   output$var_miss <- renderPlotly({
-    data_form() %>% gg_miss_var(show_pct = TRUE) %>% ggplotly
+    form_selected() %>% gg_miss_var(show_pct = TRUE) %>% ggplotly
   })
   
   output$case_miss <- renderPlotly({
-    data_form() %>% gg_miss_case(show_pct = TRUE) %>% ggplotly
+    form_selected() %>% gg_miss_case(show_pct = TRUE) %>% ggplotly
   })
   
   output$miss_pattern <- renderPlot({
-    data_form() %>% gg_miss_upset(text.scale = 3, nsets = ncol(data_form()))
+    form_selected() %>% gg_miss_upset(text.scale = 3, nsets = ncol(form_selected()))
   })
 
 }
