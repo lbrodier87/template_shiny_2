@@ -98,20 +98,6 @@ get_queries <- function(index, df){
 #' @export
 #'
 get_data <- function(){
-  #######################################################################################################################
-  ###                                                     LIBRARIES                                                   ###
-  #######################################################################################################################
-  library(secuTrialR)
-  library(dplyr)
-  library(magrittr)
-  library(stringr)
-  library(tidyr)
-  library(lubridate)
-  library(janitor)
-  library(tables)
-  library(missMethods)
-  library(ggpubr)
-  library(DT)
 
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
