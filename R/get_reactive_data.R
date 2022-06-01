@@ -27,16 +27,11 @@ get_reactive_data <- function(input){
       filter(data$all, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
     })
   
-  form_selected <- reactive(
-      data$st_data[[input$forms]]
-    )
-
 
   ## Save reactive datafranes into list
 
   reactive_data <- list(
     rx_random = random_period,
-    rx_form = form_selected,
     rx_all = all_period
     # , rx_missing = missing_period
   )
