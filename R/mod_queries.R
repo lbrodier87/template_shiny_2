@@ -68,7 +68,7 @@ mod_queries_server <- function(input, output, session, ls.queries){
     
     no <- ls.queries() %>% filter(querystatus == "answered" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "answered", color = "yellow")
   })
   
@@ -77,7 +77,7 @@ mod_queries_server <- function(input, output, session, ls.queries){
     
     no <- ls.queries() %>% filter(querystatus == "closed" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "closed", color = "yellow")
   })
   
@@ -86,7 +86,7 @@ mod_queries_server <- function(input, output, session, ls.queries){
     
     no <- ls.queries() %>% filter(querystatus == "open" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "open", color = "red")
   })
   
