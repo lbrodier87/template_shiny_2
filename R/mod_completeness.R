@@ -12,6 +12,24 @@ mod_completeness_ui <- function(id, label){
   tabItem(tabName = label,
           
           fluidRow(
+            
+            box(
+              width = 3
+              ## Forms filter
+              , selectInput(ns("forms"), "Form:", 
+                          choices = 
+                            c("esurgeries", 
+                              "baseline", 
+                              "outcome",
+                              "treatment",
+                              "allmedi",
+                              "studyterminat",
+                              "ae", "sae"),
+                          selected = "baseline")
+            )
+          )
+          
+          , fluidRow(
             autoWaiter(),
             tabBox(width = 12,
                    title = "",
