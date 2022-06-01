@@ -96,6 +96,7 @@ get_queries <- function(index, df){
 #'
 #' @return
 #' @export
+#' @importFrom purrr map
 #'
 get_data <- function(){
 
@@ -155,8 +156,8 @@ get_data <- function(){
     magrittr::extract(c(
       "esurgeries", "baseline", "outcome", "treatment", "allmedi", "studyterminat", "ae", "sae"
     )) %>%
-    purrr::map(tibble) %>%
-    purrr::map(~ .x %>% select(-contains(".factor")))
+    map(tibble) %>%
+    map(~ .x %>% select(-contains(".factor")))
 
     sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
