@@ -39,7 +39,7 @@ Performance measures allow an overview of study progress and data quality.
 
 -   **Recruitment** `mod_recruitment` provides a recruitment plot together with two information boxes.
 
--   **Recruitment (accrualPlot)** `mod_recruitment2` is as above, but using the [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/). It also includes a table of recruitment information per site.
+-   **Recruitment (accrualPlot)** `mod_recruitment2` is as above, but using the `accrualPlot` package. It also includes a table of recruitment information per site.
 
 -   **Recruitment map** `mod_recruitment_map` shows a leaflet map, showing site locations, linked to a recruitment plot (based on `accrualPlot`)
 
