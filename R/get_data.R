@@ -82,7 +82,7 @@ get_queries <- function(index, df){
   nr <- nrow(df)
   
   new.df <- df %>% 
-    select(pat_id, centre.short, Visit) %>% 
+    select(pat_id, centre.short, Visit, rando_date.date) %>% 
     mutate(nr.queries = sample(1:40, nr, replace = TRUE)) %>% 
     slice(index)
   nr.times <- new.df %>% pull(nr.queries)
@@ -153,6 +153,18 @@ get_data <- function(){
     left_join(randomized %>% select(pat_id, rando_date.date, total.ended, total.randomized, ended.study, ended.study.reason), by = "pat_id") %>% 
     mutate(centre.short = factor(centre.short, levels = c("A", "B", "C", "D", "E"))) 
   
+  ## Queries df
+  
+    nr.rows <- df.all %>% nrow()
+    df <- purrr::map_dfr(1:nr.rows, get_queries, df = df.all)
+    no <- df %>% nrow()
+    set.seed(12481498)
+    df.queries <- df %>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)),
+                   queryform = sample(c("Adverse events", "Diagnosis", "Biobanking", "MRI", "Laboratory"), no, replace = TRUE, prob = c(0.2, 0.2, 0.2, 0.2, 0.2)),
+                   query = sample(c("Date:Please enter a date", "Date:Event date is greater than current date", "Description: Value required"), no, replace = TRUE, prob = c(0.5, 0.3, 0.2))) %>% 
+      separate(query, c("query.field", "query"), sep = ":")
+  
+  
   locations <- data.frame(centre.short = LETTERS[1:5],
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
@@ -199,6 +211,7 @@ get_data <- function(){
     data.extraction.date = data.extraction.date,
     randomized = randomized,
     all = df.all,
+    queries = df.queries,
     locations = locations,
     study_params = study_params,
     sae = sae,
