@@ -23,23 +23,6 @@ knitr::opts_chunk$set(
 
 `template_shiny` provides a template shiny app, and a library of modules, that can be used for clinical trials and research. When installed in R, the package is then called `shinytemplate` (`template_shiny` is not a valid R package name).
 
-## Packages only available on github and required to use the package
-
-Two packages need to be installed and are not available on CRAN. You can install them with the following commands:
-
-- [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/)
-
-```{r eval = FALSE}
-devtools::install_github("CTU-Bern/accrualPlot")
-```
-
-- [`secuTrialR`](https://swissclinicaltrialorganisation.github.io/secuTrialR/)
-
-```{r eval = FALSE}
-devtools::install_github("SwissClinicalTrialOrganisation/secuTrialR")
-```
-
-
 ## How to use this package in your own application
 
 The code in this repository can be used as the basis for an app. Copy the code to your computer using whichever approach you like (e.g. clone this repository to your computer and push it into a new repository of your own - [info here](https://zhannina.github.io/Git-create-from-existing/)). Try out the different modules on the data already included in the package to decide which you prefer/need. This is easiest with `devtools::load_all()` and then `run_app()` to launch the application. Remove the modules you do not need (commenting out the relevant lines in `ui.R` and `server.R` may be sufficient). Modify the remaining code to use your own data.
