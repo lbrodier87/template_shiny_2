@@ -12,7 +12,7 @@ mod_queries_server(input, output, session, data)
 \arguments{
 \item{id}{standard shiny id argument}
 
-\item{label}{standard shiny label argument}
+\item{label}{standard shiny label argument#'}
 
 \item{input}{standard shiny input argument}
 
@@ -24,4 +24,7 @@ mod_queries_server(input, output, session, data)
 }
 \description{
 In development
+}
+\author{
+Suvitha Subramaniam
 }
