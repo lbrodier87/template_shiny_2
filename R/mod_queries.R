@@ -53,22 +53,10 @@ mod_queries_ui <- function(id, label){
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data data for use in calculations
-mod_queries_server <- function(input, output, session, data){
+mod_queries_server <- function(input, output, session, ls.queries){
 
   links <- get_links()
-  
-  ## Generate list of queries
-  ls.queries <- reactive({
-    
-    nr.rows <- data() %>% nrow()
-    df <- purrr::map_dfr(1:nr.rows, get_queries, df = data())
-    no <- df %>% nrow()
-    set.seed(12481498)
-    df %<>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)))
-    return(df)
-    
-  })
-  
+
   ## No.of total queries
   output$nrtotalqr <- renderValueBox({
     no <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
@@ -80,7 +68,7 @@ mod_queries_server <- function(input, output, session, data){
     
     no <- ls.queries() %>% filter(querystatus == "answered" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "answered", color = "yellow")
   })
   
@@ -89,7 +77,7 @@ mod_queries_server <- function(input, output, session, data){
     
     no <- ls.queries() %>% filter(querystatus == "closed" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "closed", color = "yellow")
   })
   
@@ -98,7 +86,7 @@ mod_queries_server <- function(input, output, session, data){
     
     no <- ls.queries() %>% filter(querystatus == "open" & Visit == input$visit) %>% nrow()
     all <- ls.queries() %>% filter(Visit == input$visit) %>% nrow()
-    perc <- round(no/all*100, digits = 2)
+    perc <- round(no/all*100, digits = 1)
     valueBox(value = tags$p(paste0(no, " (", perc, "%)"), style = "font-size: 80%;"), subtitle = "open", color = "red")
   })
   
@@ -144,9 +132,9 @@ mod_queries_server <- function(input, output, session, data){
              link = createLink(link)) %>%
       arrange(centre.short) %>% 
       ungroup() %>% 
-      dplyr::select("Center" = centre.short, Visit, "Query status" = querystatus, "Link to secuTrial" = link) 
+      dplyr::select("Center" = centre.short, Visit, "Form" = queryform, "Field" = query.field, "Query" = query, "Status" = querystatus,  "Link to secuTrial" = link) 
     
-  }, escape = FALSE)
+  }, filter = "top", rownames = FALSE, escape = FALSE)
   
   output$openquerytable <- renderDT({
 
@@ -159,8 +147,10 @@ mod_queries_server <- function(input, output, session, data){
              link = createLink(link)) %>%
       arrange(centre.short) %>% 
       ungroup() %>% 
-      dplyr::select("Center" = centre.short, Visit, "Query status" = querystatus, "Link to secuTrial" = link) 
+      dplyr::select("Center" = centre.short, Visit, "Form" = queryform, "Field" = query.field, "Query" = query, "Status" = querystatus, "Link to secuTrial" = link) 
 
-  }, escape = FALSE)
+    # datatable(df, rownames = FALSE, filter = "top")
+    
+  }, filter = "top", rownames = FALSE, escape = FALSE)
 
 }
