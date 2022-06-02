@@ -75,6 +75,7 @@ get_visits <- function(df){
 #'
 #' @return
 #' @export
+#' @import dplyr
 #'
 #' @examples
 get_queries <- function(index, df){
@@ -96,22 +97,12 @@ get_queries <- function(index, df){
 #'
 #' @return
 #' @export
+#' @import dplyr
+#' @import tidyr
+#' @import secuTrialR
+#' @importFrom purrr map
 #'
 get_data <- function(){
-  #######################################################################################################################
-  ###                                                     LIBRARIES                                                   ###
-  #######################################################################################################################
-  library(secuTrialR)
-  library(dplyr)
-  library(magrittr)
-  library(stringr)
-  library(tidyr)
-  library(lubridate)
-  library(janitor)
-  library(tables)
-  library(missMethods)
-  library(ggpubr)
-  library(DT)
 
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
@@ -174,8 +165,22 @@ get_data <- function(){
   study_params <- data.frame(acc_target = 150,
                             study_start = as.Date('2017/12/01'))
   
+
+  ## read secuTrial test data to illustrate the completeness module
+  st_data = system.file("extdata/sT_exports/exp_opt/s_export_CSV-xls_CTU05_all_info.zip",
+              package = "secuTrialR") %>%
+    read_secuTrial() %>%
+    magrittr::extract(c(
+      "esurgeries", "baseline", "outcome", "treatment", "allmedi", "studyterminat", "ae", "sae"
+    )) %>%
+    map(tibble) %>%
+    map(~ .x %>% select(-contains(".factor")))
+
+    sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
+
   sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
   sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
+
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
                     severity_level = sample(c("Mild", "Moderate", "Severe"), 50, replace = T), 
                     causality = sample(c("Certain", "Probable", "Possible", "Unlikely", "Not related", "Not assessable"), 50, replace = T), 
@@ -189,19 +194,7 @@ get_data <- function(){
                     sae_report_type = sample(c("Initial", "Follow-up", "Final"), 50, replace = T), 
                     sae_description = sample(sae_descr, 50, replace = T)) #?
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})
-  
-  ## TODO: delete
-  set.seed(28991)
-  missing <- tibble(
-    age = rnorm(1000, 40, 10),
-    gender = sample(c("m", "f"), 1000, replace = TRUE),
-    weight = ifelse(
-      gender == "m",
-      70 + rnorm(1, 0, 20),
-      60 + rnorm(1, 0, 15)
-    )
-  ) %>%
-    missMethods::delete_MCAR(.2) 
+
 
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
@@ -213,9 +206,9 @@ get_data <- function(){
     all = df.all,
     queries = df.queries,
     locations = locations,
+    st_data = st_data,
     study_params = study_params,
-    sae = sae,
-    missing = missing
+    sae = sae
   )
 
   return(data)

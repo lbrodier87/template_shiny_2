@@ -75,6 +75,7 @@ app_ui <- function() {
                                        end   = as.POSIXct(today())),
                         ## Center filter
                         selectInput("center", "Acute center", choices = c("All", "A", "B", "C", "D", "E"), selected = "All"),
+                        
                         width = "350")),
 
                     ## Body

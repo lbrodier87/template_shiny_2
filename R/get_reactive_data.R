@@ -27,6 +27,7 @@ get_reactive_data <- function(input){
       filter(data$all, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
     })
   
+
   sae_period <- reactive(
     if(input$center != "All"){
       filter(data$sae, centre.short == input$center & sae_date >= input$period[1] & sae_date <= input$period[2])
