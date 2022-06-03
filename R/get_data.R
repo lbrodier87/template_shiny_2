@@ -176,10 +176,9 @@ get_data <- function(){
     map(tibble) %>%
     map(~ .x %>% select(-contains(".factor")))
 
-    sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
 
-  sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
-  sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
+    sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
+    sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
 
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
                     severity_level = sample(c("Mild", "Moderate", "Severe"), 50, replace = T), 
