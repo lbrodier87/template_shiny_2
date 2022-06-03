@@ -1,15 +1,15 @@
 #' Serious Adverse Events
 #'
-#' In development
-#' @rdname mod_sae
-#' @param id standard shiny id argument
-#' @param label standard shiny label argument
-#' 
+#' In development 
 #' @author Laurent Brodier
 #' @import ggplot2
 #' @import plotly
 #' @import reshape2
 #' @import DT
+#' 
+#' @rdname mod_sae
+#' @param id standard shiny id argument
+#' @param label standard shiny label argument
 mod_sae_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
@@ -18,6 +18,7 @@ mod_sae_ui <- function(id, label){
             box(width = 12,
               #Filters choices are generated on server side, based on dataset content
               fluidRow( 
+                p(style="padding-left:15px", "Filter SAE by characteristics: delete those that do not apply."),
                 column(4, uiOutput(ns("sae_filter_report_type_ui"))), 
                 column(4, uiOutput(ns("sae_filter_severity_ui"))),
                 column(4, uiOutput(ns("sae_filter_expectedness_ui")))
@@ -105,7 +106,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     d
   })
   
-  
+
   ## plot of cumulative SAE number (all centers)
   output$sae_plot_1 <- renderPlotly({
     d <- data.sae.filtered() #get filtered reactive data
@@ -113,9 +114,9 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     d$cumul <- seq_along(d[,sae_date]) #get cumulative count of SAE
     a <- aggregate(data = d, as.formula(paste0("cumul ~ ", sae_date)), max) #aggregate max (to acount for >1 SAE on same date)
     #do the plot (+add custom label to hover text as points)
-    p <- ggplot() + geom_line(aes(x=a[,sae_date], y=a$cumul, color=paste0("All (n=", max(a$cumul), ")"))) + 
+    p <- ggplot() + geom_step(aes(x=a[,sae_date], y=a$cumul, color=paste0("All (n=", max(a$cumul), ")"))) + 
       geom_point(aes(x=a[,sae_date], y=a$cumul, text=paste("SAE date:", a[,sae_date], 
-                                                           "<br>SAE count:", a$cumul)), size=0.5) +
+                                                           "<br>SAE count:", a$cumul)), size=0.5, alpha=0) +
       theme_bw() + labs(x="SAE date", y="SAE cumulative number", color="Center") + 
       scale_color_manual(values=c("#000000"))
     #convert to plotly (+specify tooltip)
@@ -142,11 +143,11 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     d <- d[order(d[,sae_date]),]
     
     #do the plot (+add custom label to hover text as points)
-    p <- ggplot() +  geom_line(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")") )) + 
+    p <- ggplot() +  geom_step(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")") )) + 
       geom_point(aes(x=d[,sae_date], y=d$cumul, color=paste0(d[,center], " (n=", d$tot, ")"), 
                     text=paste('SAE date: ', d[,sae_date],
                                '<br>Center:', d[,center],
-                               '<br>SAE count:', d$cumul)), size=0.5) + 
+                               '<br>SAE count:', d$cumul)), size=0.5, alpha=0) + 
       theme_bw() + labs(x="SAE date", y="SAE cumulative number", color="Center")
     
     #convert to plotly (+specify tooltip)
@@ -240,6 +241,53 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     names(data.sae.static)[names(data.sae.static) %in% sae_vars]
   })
   
+  # Add an * to filters when they are active
+  observe({
+    if(length(input$sae_filter_report_type) == length(sae_report_type_list()) ){
+      l <- "Filter by report type"
+    }else{
+      l <- "Filter by report type*"
+    }
+    updateSelectInput(session, 'sae_filter_report_type', label = l, 
+                      choices = NULL, selected = NULL)
+  })
+  observe({
+    if(length(input$sae_filter_severity) == length(severity_level_list())){
+      l <- "Filter by severity"
+    }else{
+      l <- "Filter by severity*"
+    }
+    updateSelectInput(session, 'sae_filter_severity', label = l,  
+                      choices = NULL, selected = NULL)
+  })
+  observe({
+    if(length(input$sae_filter_expectedness) == length(sae_expectedness_list())){
+      l <- "Filter by expectedness"
+    }else{
+      l <- "Filter by expectedness*"
+    }
+    updateSelectInput(session, 'sae_filter_expectedness', label = l,  
+                      choices = NULL, selected = NULL)
+  })
+  observe({
+    if(length(input$sae_filter_causality) == length(sae_causality_list())){
+      l <- "Filter by causality"
+    }else{
+      l <- "Filter by causality*"
+    }
+    updateSelectInput(session, 'sae_filter_causality', label = l,  
+                      choices = NULL, selected = NULL)
+  })
+  observe({
+    if(length(input$sae_filter_outcome) == length(sae_outcome_list())){
+      l <- "Filter by outcome"
+    }else{
+      l <- "Filter by outcome*"
+    }
+    updateSelectInput(session, 'sae_filter_outcome', label = l,  
+                      choices = NULL, selected = NULL)
+  })
+  
   # Dynamic UI - report type
   output$sae_filter_report_type_ui <- renderUI({
     choices <- sae_report_type_list()
@@ -284,7 +332,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_table_detail_var_ui <- renderUI({
     choices <- c("None", sae_var_list())
     selectInput(ns("sae_table_detail_var"), 
-                label = "Detail by variable",  
+                label = "Detail by SAE characteristics",  
                 choices = choices, multiple = F, 
                 selected = "None") 
   })
