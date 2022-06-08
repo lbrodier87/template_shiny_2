@@ -57,8 +57,8 @@ get_reactive_data <- function(input){
   ## Save reactive datafranes into list
   reactive_data <- list(
     rx_random = random_period,
-    rx_all = all_period
-    , rx_consistency = consistency_period
+    rx_all = all_period,
+    rx_consistency = consistency_period,
     rx_all = all_period,
     rx_sae = sae_period,
     rx_queries = queries_period

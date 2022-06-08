@@ -11,7 +11,6 @@
 #' @import stringr
 #' @import DT
 #' @import ggdist
-#' @import plotly
 #' 
 mod_consistency_ui <- function(id, label){
   
@@ -32,7 +31,7 @@ mod_consistency_ui <- function(id, label){
                             uiOutput(ns("desmin")),
                             uiOutput(ns("desmax")),
                             tableOutput(outputId = ns("minmax")),
-                            tabsetPanel(tabPanel("Frequencies",
+                            tabsetPanel(tabPanel("Distribution",
                                                  plotOutput(outputId = ns("histPlot"))),
                                         tabPanel("List of entries",
                                                  br(),
@@ -100,7 +99,7 @@ mod_consistency_server <- function(input, output, session, data){
   output$numvar_out <- renderUI({
 
     selectInput(inputId = ns("numvar_in"),
-                label = "Select variable:",
+                label = "Select variable of interest:",
                 choices = colnames(data() %>% select(where(is.numeric))),
                 selected = colnames(data() %>% select(where(is.numeric)))[1])
 
@@ -118,9 +117,10 @@ mod_consistency_server <- function(input, output, session, data){
   output$idvar1_out <- renderUI({
 
     selectInput(inputId = ns("idvar1_in"),
-                label = "Select variable:",
+                label = "Select additional variable(s) to be displayed:",
                 choices = colnames(data()),
-                selected = colnames(data() %>% select(where(is.numeric)))[1])
+                selected = colnames(data() %>% select(where(is.numeric)))[1],
+                multiple = TRUE)
 
   })
   
@@ -181,27 +181,26 @@ mod_consistency_server <- function(input, output, session, data){
   # Create histogram for selected numeric variable
   output$histPlot <- renderPlot({
 
-    ggplot(data = data(), aes(y = .data[[input$numvar_in]])) +
-      ggdist::stat_halfeye(adjust = 0.5,
-                   justification = -.2,
-                   .width = 0,
-                   point_color = NA,
-                   fill = "#00BA38") +
-      geom_boxplot(width = .12,
-                   alpha = 0.5,
-                   fill =  "#00BA38") +
-      ggdist::stat_dots(side = "left",
-                justification = 1.1,
-                color = "#00BA38",
-                fill = "#00BA38") +
-      annotate("rect", xmin = -Inf, xmax = Inf, ymin = as.numeric(input$maxSlider), ymax = Inf,
-               alpha = 0.2, fill = "red") +
-      annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = as.numeric(input$minSlider),
-               alpha = 0.2, fill = "red") +
-      theme_bw() +
-      theme(axis.title.x = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks = element_blank())
+    #ggplotly(
+      ggplot(data = data(), aes(x = centre.short, y = .data[[input$numvar_in]])) +
+        geom_violin(fill = "#00BA38", alpha = 0.5) +
+        geom_boxplot(width = .12, fill = "white", color = "black") +
+        #stat_summary(fun.data = "mean_sdl", mult = 1, geom = "pointrange") +
+        geom_jitter(position = position_jitter(0.2),
+                    shape = 16) +
+        xlab("Centre") +
+        annotate("rect", xmin = -Inf, xmax = Inf, ymin = as.numeric(input$maxSlider), ymax = Inf,
+                 alpha = 0.2, fill = "red") +
+        annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = as.numeric(input$minSlider),
+                 alpha = 0.2, fill = "red") +
+        theme_bw()
+    #) %>% 
+      # This does not work with plotly, annotate() does not work either
+      # layout(shapes = list(
+      #        list(type = "rect",
+      #             fillcolor = "red", line = list(color = "blue"), opacity = 0.3,
+      #             x0 = -1, x1 = 2, xref = "x",
+      #             y0 = 0, y1 = 12.5, yref = "y")))
 
   })
 
@@ -220,7 +219,7 @@ mod_consistency_server <- function(input, output, session, data){
   output$numEntryList <- renderDT({
 
     data() %>%
-      select(.data[[input$idvar1_in]], .data[[input$numvar_in]]) %>%
+      select(!!!syms(c(input$idvar1_in, input$numvar_in))) %>%
       filter(.data[[input$numvar_in]] < as.numeric(input$minSlider) |
                .data[[input$numvar_in]] > as.numeric(input$maxSlider)) %>%
       mutate(across(where(is.numeric), ~ round(.x, digits = as.numeric(input$round_num)))) %>% 
@@ -230,7 +229,7 @@ mod_consistency_server <- function(input, output, session, data){
   
   # Render reactive data element according to filter variables
   react_char_dat <- reactive({
-    
+
     # Convert all character variables to factors for later use in plots
     react_dat <- data() %>% 
       mutate(across(where(is.character), as.factor))
@@ -282,6 +281,13 @@ mod_consistency_server <- function(input, output, session, data){
 
   # Barplot with frequencies (with bars sideways to handle many categories)
   output$freqPlot <- renderPlot({
+    
+    if(!is.na(input$filtText) & 
+       !is.null(input$filtText) &
+       input$filtText != "" & 
+       !(input$filtText %in% react_char_dat()[input$charvar_in])){
+      validate("The string pattern was not found in the data for the selected variable")
+    }
     
     # convert character vectors to factors for plotting
     sumvar_name <- paste0(input$charvar_in, "_sum")
