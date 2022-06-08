@@ -157,7 +157,7 @@ get_data <- function(){
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
                           monthly = c(2,1,2,1,5),
-                          target = c(35, 25, 30, 30, 30))
+                          target = c(25, 35, 30, 30, 30))
   
   study_params <- data.frame(acc_target = 150,
                             study_start = as.Date('2017/12/01'))
