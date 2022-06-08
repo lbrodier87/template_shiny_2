@@ -71,7 +71,8 @@ mod_completeness_server <- function(input, output, session, data){
   })
   
   output$vis_miss <- renderPlotly({
-    form_selected() %>% vis_miss %>% ggplotly
+    p <- form_selected() %>% vis_miss() + labs(y = "Patients") + coord_flip()
+    ggplotly(p)
   })
   
   output$var_miss <- renderPlotly({
@@ -79,11 +80,12 @@ mod_completeness_server <- function(input, output, session, data){
   })
   
   output$case_miss <- renderPlotly({
-    form_selected() %>% gg_miss_case(show_pct = TRUE) %>% ggplotly
+    p <- form_selected() %>% gg_miss_case(show_pct = TRUE) + labs(x = "Patients") 
+    ggplotly(p)
   })
   
   output$miss_pattern <- renderPlot({
-    form_selected() %>% gg_miss_upset(text.scale = 3, nsets = ncol(form_selected()))
+    form_selected() %>% gg_miss_upset(text.scale = 3, nset = 10)
   })
 
 }
