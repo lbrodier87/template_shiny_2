@@ -237,7 +237,7 @@ get_data <- function(){
     locations = locations,
     st_data = st_data,
     study_params = study_params,
-    consistency = consistency
+    consistency = consistency, 
     sae = sae
   )
 
