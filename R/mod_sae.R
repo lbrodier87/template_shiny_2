@@ -86,6 +86,14 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   sae_vars <- c("severity_level", "causality", "expectedness", "outcome", "death", 
                 "life_threatening", "persistant_disability", "hospitalization", 
                 "congenital_anomyla_birth_defect", "sae_report_type", "centre.short") 
+  
+  #variable names and choices translation (#TEST)
+  var.transl <- NULL #keep NULL to use variables names in the dataset
+  original <- c("severity_level", "causality", "expectedness", "outcome", 
+                "death", "life_threatening", "persistant_disability", "hospitalization")
+  new <- c("Severity level of SAE", "Causality/Relatedness", "Expectedness", "Outcome", 
+           "Resulted in death", "Is life threatening", "Resulted in permanent disability", "Required hospitalization or prolongation of hospitalization")
+  var.transl <- data.frame(original = original, new = new)
 
   
   ## reactive filtered data based on SAE characteristics, used in plots below
@@ -105,7 +113,6 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     d <- d[d[,sae_report_type] %in% input$sae_filter_report_type,]
     d
   })
-  
 
   ## plot of cumulative SAE number (all centers)
   output$sae_plot_1 <- renderPlotly({
@@ -159,9 +166,11 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     #get input: what factor to use as color? + map to df col name
     req(input$sae_fact_sel) #wait for select input
     f <- input$sae_fact_sel
-    
     d <- data.sae.filtered() #get filtered reactive data
     if(f != 'None'){
+      if( (!f %in% names(d)) & (!is.null(var.transl)) ){
+        f <- var.transl$original[var.transl$new == f] #revert back to original if label translated
+      }
       a <- aggregate(data = d, as.formula(paste0(record_id, " ~ ", center, "*", f)), length)
       p <- ggplot(data=a, aes(x=get(center), y=get(record_id), fill=get(f))) + 
         geom_col(aes(text=paste0("Center: ", get(center), 
@@ -185,9 +194,16 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
 
   # Data Table of SAE count aggregate
   output$sae_table <- renderTable({
+    req(input$sae_table_detail_var) #wait for select input
+    d <- data.sae.filtered()
     if(input$sae_table_detail_var != "None"){
-      sae_table <- aggregate(data = data.sae.filtered(), as.formula(paste0(record_id, "~", input$sae_table_detail_var, "*", center)), length)
-      sae_table <- reshape2::dcast(sae_table, formula = as.formula(paste0(center, " ~ ", input$sae_table_detail_var)))
+      f <- input$sae_table_detail_var
+      if( (!f %in% names(d)) & (!is.null(var.transl)) ){
+        f <- var.transl$original[var.transl$new == f] #revert back to original if label translated
+      }
+      
+      sae_table <- aggregate(data = d, as.formula(paste0(record_id, "~", f, "*", center)), length)
+      sae_table <- reshape2::dcast(sae_table, formula = as.formula(paste0(center, " ~ ", f)))
       if( length(unique(sae_table[,center])) > 1 ){
         sae_sum <- apply(as.data.frame(sae_table[,2:ncol(sae_table)]), 2, function(x){sum(x, na.rm = T)})
         sae_table <- rbind(c("All", sae_sum), sae_table)
@@ -198,7 +214,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
         sae_table$Total <- apply(sae_table[,2:ncol(sae_table)], 1, function(x){as.character(sum(as.numeric(x), na.rm=T))})
       }
     }else{
-      sae_table <- aggregate(data=data.sae.filtered(), as.formula(paste0(record_id, " ~ ", center)), length)
+      sae_table <- aggregate(data=d, as.formula(paste0(record_id, " ~ ", center)), length)
       names(sae_table) <- c("Center", "Total")
       if( length(unique(sae_table$Center)) > 1 ){
         sae_table <- rbind( c("All", as.character(sum(as.numeric(sae_table$Total)))), sae_table )
@@ -211,7 +227,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_table_1 <- DT::renderDataTable({
     DT::datatable(data.sae.filtered()[order(data.sae.filtered()[,sae_date]),], 
                   rownames = FALSE, 
-                  options = list(scrollX = T, pageLength = 10))
+                  options = list(scrollX = T, pageLength = 10, filter = "top"))
   })
 
   
@@ -238,7 +254,16 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   })
   #list of content - SAE variables
   sae_var_list <- reactive({
-    names(data.sae.static)[names(data.sae.static) %in% sae_vars]
+    nm <- names(data.sae.static)[names(data.sae.static) %in% sae_vars]
+    #translate varnames if not null
+    if(!is.null(var.transl)){
+      for(i in 1:nrow(var.transl)){
+        if(var.transl$original[i] %in% nm){
+          nm[nm == var.transl$original[i]] <- var.transl$new[i]
+        }
+      }
+    }
+    nm
   })
   
   # Add an * to filters when they are active
