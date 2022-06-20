@@ -55,7 +55,7 @@ app_ui <- function() {
                                  menuItem("Retention", tabName = mod$retention, startExpanded = TRUE, icon = icon("door-open")),
                                  menuItem("Data quality", startExpanded = TRUE, icon = icon("database"),
                                           menuItem("Completeness", tabName = mod$completeness),
-                                          menuItem("Consistency", tabName = mod$consistency, badgeLabel = "Upcoming", badgeColor = "green"),
+                                          menuItem("Consistency", tabName = mod$consistency),
                                           menuItem("Timeliness", tabName = mod$timeliness),
                                           menuItem("Queries", tabName = mod$queries))),
                         menuItem("Study management", startExpanded = TRUE,
@@ -75,6 +75,7 @@ app_ui <- function() {
                                        end   = as.POSIXct(today())),
                         ## Center filter
                         selectInput("center", "Acute center", choices = c("All", "A", "B", "C", "D", "E"), selected = "All"),
+                        
                         width = "350")),
 
                     ## Body

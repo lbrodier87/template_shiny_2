@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# shinytemplate/template\_shiny
+# shinytemplate/template_shiny
 
 <!-- badges: start -->
 
@@ -14,6 +14,23 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 modules, that can be used for clinical trials and research. When
 installed in R, the package is then called `shinytemplate`
 (`template_shiny` is not a valid R package name).
+
+## Packages only available on github and required to use the package
+
+Two packages need to be installed and are not available on CRAN. You can
+install them with the following commands:
+
+-   [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/)
+
+``` r
+devtools::install_github("CTU-Bern/accrualPlot")
+```
+
+-   [`secuTrialR`](https://swissclinicaltrialorganisation.github.io/secuTrialR/)
+
+``` r
+devtools::install_github("SwissClinicalTrialOrganisation/secuTrialR")
+```
 
 ## How to use this package in your own application
 
@@ -49,8 +66,8 @@ quality.
     together with two information boxes.
 
 -   **Recruitment (accrualPlot)** `mod_recruitment2` is as above, but
-    using the `accrualPlot` package. It also includes a table of
-    recruitment information per site.
+    using the [`accrualPlot`](https://ctu-bern.github.io/accrualPlot/).
+    It also includes a table of recruitment information per site.
 
 -   **Recruitment map** `mod_recruitment_map` shows a leaflet map,
     showing site locations, linked to a recruitment plot (based on
