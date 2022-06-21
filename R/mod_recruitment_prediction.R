@@ -13,6 +13,13 @@ mod_recruitment_prediction_ui <- function(id, label) {
   ns <- NS(id)
   tabItem(
     tabName = label,
+    
+    fluidRow(
+      box(width = 3
+          ## Select input menu for visits 
+          , selectInput(ns("filter_add"), "Additional Filters", choices = c("None", "At least 1 QoL done", "At least 2 QoL done"), selected = "None")
+      )
+    ),
     fluidRow(
       tabBox(
         width = 12,
@@ -66,14 +73,13 @@ mod_recruitment_prediction_server <- function(input, output, session, data.rando
   })
   acc2 <- accrualPlot::accrual_create_df(all_data$rando_date.date,
                                          by = all_data$centre.short)
+  target <- reactive({
+    # Alan
+    target_vec <- setNames(as.character(locations()$target), locations()$centre.short)
+    # cat(paste("Target vector: ", target_vec))
+    # return(target_vec)
+  })
   
-  # # recruitment targets
-  # site_info_rx <- reactive({
-  #   targ <- locations %>% 
-  #     # filter(centre.short %in% names(acc())) %>% 
-  #     filter(centre.short == input$center)
-  # })
-
   ## Prediction plot
   output$predictplot <- renderPlotly({
     
@@ -86,9 +92,9 @@ mod_recruitment_prediction_server <- function(input, output, session, data.rando
   
   ## Prediction plot by site
   output$predictplot_site <- renderPlotly({
-    message(locations$target)
-    # p <- accrualPlot::gg_accrual_plot_predict(acc(), target = append(locations$target, study_params$acc_target)) +
-    p <- accrualPlot::gg_accrual_plot_predict(acc(), target = append(c(30, 30, 30, 30, 30), study_params$acc_target)) +
+    cat(paste("tARGET: ", target()))
+    
+    p <- accrualPlot::gg_accrual_plot_predict(acc(), target = append(target(), study_params$acc_target)) +
       theme_bw() +
       scale_x_date(labels = function(x) format(x, format = "%d %b %Y"))
     
