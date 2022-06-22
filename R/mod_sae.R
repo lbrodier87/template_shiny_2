@@ -85,14 +85,16 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   # SAE variables (factors) to use in selectInput for categories (useful?)
   sae_vars <- c("severity_level", "causality", "expectedness", "outcome", "death", 
                 "life_threatening", "persistant_disability", "hospitalization", 
-                "congenital_anomyla_birth_defect", "sae_report_type", "centre.short") 
+                "congenital_anomalia_birth_defect", "sae_report_type", "centre.short") 
   
   #variable names and choices translation (#TEST)
   var.transl <- NULL #keep NULL to use variables names in the dataset
   original <- c("severity_level", "causality", "expectedness", "outcome", 
-                "death", "life_threatening", "persistant_disability", "hospitalization")
+                "death", "life_threatening", "persistant_disability", "hospitalization", 
+                "congenital_anomalia_birth_defect", "sae_report_type", "centre.short")
   new <- c("Severity level of SAE", "Causality/Relatedness", "Expectedness", "Outcome", 
-           "Resulted in death", "Is life threatening", "Resulted in permanent disability", "Required hospitalization or prolongation of hospitalization")
+           "Resulted in death", "Is life threatening", "Resulted in permanent disability", "Required hospitalization or prolongation of hospitalization", 
+           "Caused congenital anomaly or birth defect", "Type of SAE report", "Center")
   var.transl <- data.frame(original = original, new = new)
 
   
