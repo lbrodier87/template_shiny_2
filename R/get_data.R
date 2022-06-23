@@ -165,7 +165,12 @@ get_data <- function(){
   study_params <- data.frame(acc_target = 150,
                             study_start = as.Date('2017/12/01'))
   
-
+  centers <- data.frame(centre.short = c(LETTERS[1:5], "Overall"),
+                        monthly = c(2,1,2,1,5,11),
+                        target = c(25, 35, 30, 30, 30, 150),
+                        target_qol = c(20, 30, 25, 25, 25, 125),
+                        target_fu1 = c(15, 25, 20, 20, 20, 100))
+  
   ## read secuTrial test data to illustrate the completeness module
   st_data = system.file("extdata/sT_exports/exp_opt/s_export_CSV-xls_CTU05_all_info.zip",
               package = "secuTrialR") %>%
@@ -235,6 +240,7 @@ get_data <- function(){
     all = df.all,
     queries = df.queries,
     locations = locations,
+    centers = centers,
     st_data = st_data,
     study_params = study_params,
     consistency = consistency, 

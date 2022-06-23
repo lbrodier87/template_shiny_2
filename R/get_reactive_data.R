@@ -44,11 +44,14 @@ get_reactive_data <- function(input){
       filter(data$sae, sae_date >= input$period[1] & sae_date <= input$period[2])
     }
   )
-  locations_filtered <- reactive(
+  locations_filtered <- reactive({
     if(input$center != "All"){
-      filter(data$locations, centre.short == input$center)
-    } else data$locations <- data$locations
-  )
+      tmp <- filter(data$locations, centre.short == input$center)
+    } else {
+      tmp <- data$locations
+    }
+    return(tmp)
+  })
   
   # missing_period <- reactive(
   #   
