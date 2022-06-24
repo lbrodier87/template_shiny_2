@@ -5,9 +5,9 @@
 #' #@param session
 #' @return
 #' @noRd
-get_reactive_data <- function(input){
+get_reactive_data <- function(data, input){
 
-  data <- get_data()
+  # data <- get_data()
 
   random_period <- reactive(
     
