@@ -113,9 +113,12 @@ mod_consistency_ui <- function(id, label){
                             )
                             )
                    ),
-                   tabPanel("Cross variables",
+                   tabPanel("Multiple variables",
                             uiOutput(ns("crossvar_out")),
-                            tableOutput(outputId = ns("crosstab"))
+                            tableOutput(outputId = ns("crosstab")),
+                            br(),
+                            uiOutput(ns("idvar5_out")),
+                            DTOutput(outputId = ns("cross_dt"))
                             )
             )
           )
@@ -196,16 +199,16 @@ mod_consistency_server <- function(input, output, session, data){
     
     #ggplotly(
     ggplot(data = data(), aes(x = centre.short, y = .data[[input$numvar_in]])) +
-      geom_violin(fill = "#00BA38", alpha = 0.5) +
+      geom_violin(fill = "#00BA38") +
       geom_boxplot(width = .12, fill = "white", color = "black") +
       #stat_summary(fun.data = "mean_sdl", mult = 1, geom = "pointrange") +
       geom_jitter(position = position_jitter(0.2),
                   shape = 16) +
       xlab("Centre") +
       annotate("rect", xmin = -Inf, xmax = Inf, ymin = as.numeric(input$maxSlider_in), ymax = Inf,
-               alpha = 0.2, fill = "red") +
+               alpha = 0.8, fill = "darkgrey") +
       annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = as.numeric(input$minSlider_in),
-               alpha = 0.2, fill = "red") +
+               alpha = 0.8, fill = "darkgrey") +
       theme_bw()
     #) %>%
     # This does not work with plotly, annotate() does not work either
@@ -404,6 +407,7 @@ mod_consistency_server <- function(input, output, session, data){
 
   
   ## Date variables -----
+  
   # Reactive select inputs
   output$datevar_out <- renderUI({
 
@@ -427,11 +431,15 @@ mod_consistency_server <- function(input, output, session, data){
   # Create table with actual minimum and maximum values of the selected date variable
   output$minmax_date <- renderTable({
     
+    if(as.Date(input$dateRange_in[1]) > as.Date(input$dateRange_in[2])){
+      validate("Selected minimum date is larger than selected maximum date")
+    }
+    
     data() %>%
-      summarize(`Actual minimum` = as.character(min(as.Date(.data[[input$datevar_in]]), na.rm = TRUE)),
-                `Actual maximum` = as.character(max(as.Date(.data[[input$datevar_in]]), na.rm = TRUE)),
-                `Number of entries below allowed minimum` = sum(as.Date(.data[[input$datevar_in]]) < as.Date(input$dateRange_in[1]), na.rm = TRUE),
-                `Number of entries above allowed maximum` = sum(as.Date(.data[[input$datevar_in]]) > as.Date(input$dateRange_in[2]), na.rm = TRUE))
+      summarize(`Actual minimum` = as.character(min(.data[[input$datevar_in]], na.rm = TRUE)),
+                `Actual maximum` = as.character(max(.data[[input$datevar_in]], na.rm = TRUE)),
+                `Number of entries below allowed minimum` = sum(.data[[input$datevar_in]] < as.Date(input$dateRange_in[1]), na.rm = TRUE),
+                `Number of entries above allowed maximum` = sum(.data[[input$datevar_in]] > as.Date(input$dateRange_in[2]), na.rm = TRUE))
     
   })
   
@@ -447,12 +455,17 @@ mod_consistency_server <- function(input, output, session, data){
 
   # List all entries of selected date variable
   output$dateEntryList <- renderDT({
+    
+    if(as.Date(input$dateRange_in[1]) > as.Date(input$dateRange_in[2])){
+      validate("Selected minimum date is larger than selected maximum date")
+    }
 
     DT::datatable(data() %>%
                     select(!!!syms(c(input$idvar3_in, input$datevar_in))) %>%
-                    filter(as.Date(.data[[input$datevar_in]]) < as.Date(input$dateRange_in[1]) |
-                             as.Date(.data[[input$datevar_in]]) > as.Date(input$dateRange_in[2])) %>%
-                    arrange(.data[[input$datevar_in]]),
+                    filter(.data[[input$datevar_in]] < as.Date(input$dateRange_in[1]) |
+                             .data[[input$datevar_in]] > as.Date(input$dateRange_in[2])) %>%
+                    arrange(.data[[input$datevar_in]]) %>% 
+                    mutate(across(where(is.POSIXt), as.character)),
                   rownames = FALSE)
 
   })
@@ -484,12 +497,12 @@ mod_consistency_server <- function(input, output, session, data){
                         "Total both dates present")
 
     data() %>%
-      summarize(V1 = sum(as.Date(.data[[input$datevar1_in]]) ==
-                           as.Date(.data[[input$datevar2_in]]), na.rm = TRUE),
-                V2 = sum(as.Date(.data[[input$datevar1_in]]) <
-                           as.Date(.data[[input$datevar2_in]]), na.rm = TRUE),
-                V3 = sum(as.Date(.data[[input$datevar1_in]]) >
-                           as.Date(.data[[input$datevar2_in]]), na.rm = TRUE),
+      summarize(V1 = sum(.data[[input$datevar1_in]] ==
+                           .data[[input$datevar2_in]], na.rm = TRUE),
+                V2 = sum(.data[[input$datevar1_in]] <
+                           .data[[input$datevar2_in]], na.rm = TRUE),
+                V3 = sum(.data[[input$datevar1_in]] >
+                           .data[[input$datevar2_in]], na.rm = TRUE),
                 V4 = sum(!is.na(.data[[input$datevar1_in]]) & !is.na(.data[[input$datevar2_in]]))) %>%
       `colnames<-`(datecomp_names)
 
@@ -510,8 +523,9 @@ mod_consistency_server <- function(input, output, session, data){
 
     DT::datatable(data() %>%
                     select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
-                    filter(as.Date(.data[[input$datevar1_in]]) == as.Date(.data[[input$datevar2_in]])) %>%
-                    arrange(.data[[input$datevar1_in]]),
+                    filter(.data[[input$datevar1_in]] == .data[[input$datevar2_in]]) %>%
+                    arrange(.data[[input$datevar1_in]]) %>% 
+                    mutate(across(where(is.POSIXt), is.character)),
                   rownames = FALSE)
 
   })
@@ -521,8 +535,9 @@ mod_consistency_server <- function(input, output, session, data){
 
     DT::datatable(data() %>%
                     select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
-                    filter(as.Date(.data[[input$datevar1_in]]) < as.Date(.data[[input$datevar2_in]])) %>%
-                    arrange(.data[[input$datevar1_in]]),
+                    filter(.data[[input$datevar1_in]] < .data[[input$datevar2_in]]) %>%
+                    arrange(.data[[input$datevar1_in]]) %>% 
+                    mutate(across(where(is.POSIXt), as.character)),
                   rownames = FALSE)
 
   })
@@ -532,8 +547,9 @@ mod_consistency_server <- function(input, output, session, data){
 
     DT::datatable(data() %>%
                     select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
-                    filter(as.Date(.data[[input$datevar1_in]]) > as.Date(.data[[input$datevar2_in]])) %>%
-                    arrange(.data[[input$datevar1_in]]),
+                    filter(.data[[input$datevar1_in]] > .data[[input$datevar2_in]]) %>%
+                    arrange(.data[[input$datevar1_in]]) %>% 
+                    mutate(across(where(is.POSIXt), as.character)),
                   rownames = FALSE)
 
   })
@@ -545,22 +561,49 @@ mod_consistency_server <- function(input, output, session, data){
     selectizeInput(inputId = ns("crossvar_in"),
                    label = "Select variables to cross",
                    choices = colnames(data()),
-                   selected = colnames(data()[1]),
-                   multiple = TRUE,
-                   #,
-                   #options = list(maxItems = 5)
+                   selected = "centre.short",
+                   multiple = TRUE
                    )
 
   })
   
-
-  # HIER STEHENGEBLIEBEN
-  # Create plot that is a crosstable
+  # Create a crosstable
   output$crosstab <- renderTable({
     
-    data() %>%
+    if(length(input$crossvar_in) == 0){
+      validate("No variables selected")
+    } else if(data() %>% summarize(across(all_of(input$crossvar_in), n_distinct)) %>% prod() > 10000) {
+      validate("Crossing the selected variables results in too many entries for display in a crosstable")
+    }
+    
+    ftab <- data() %>%
       select(!!!syms(input$crossvar_in)) %>% 
-      ftable(exclude = NULL)
+      ftable(exclude = NULL, col.vars = 1) %>% 
+      format(quote = FALSE)
+    
+    out <- data.frame(ftab[-1,], stringsAsFactors = FALSE)
+    names(out) <- ftab[1,]
+    out
+    
+  })
+  
+  output$idvar5_out <- renderUI({
+    
+    selectInput(inputId = ns("idvar5_in"),
+                label = "Select additional variable(s) to be displayed in tables below",
+                choices = colnames(data()),
+                selected = c("pat_id", "centre.short"),
+                multiple = TRUE)
+    
+  })
+  
+  # Show all data
+  output$cross_dt <- renderDT({
+    
+    DT::datatable(data() %>%
+                    select(!!!syms(c(input$idvar5_in, input$crossvar_in))) %>% 
+                    arrange(!!!syms(input$crossvar_in)),
+                  rownames = FALSE, filter = "top")
     
   })
   
