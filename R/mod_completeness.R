@@ -1,12 +1,11 @@
 #' Completeness
 #' 
-#' @import naniar
-#' @importFrom waiter autoWaiter
-#'
 #' In development
 #' @rdname mod_completeness
 #' @param id standard shiny id argument
 #' @param label standard shiny label argument
+#' @import naniar
+#' @importFrom waiter autoWaiter
 mod_completeness_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
