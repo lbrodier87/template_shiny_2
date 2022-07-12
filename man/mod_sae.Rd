@@ -7,7 +7,7 @@
 \usage{
 mod_sae_ui(id, label)
 
-mod_sae_server(input, output, session, data.sae)
+mod_sae_server(input, output, session, data.sae, data.sae.static)
 }
 \arguments{
 \item{id}{standard shiny id argument}

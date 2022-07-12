@@ -100,22 +100,23 @@ get_queries <- function(index, df){
 #' @import dplyr
 #' @import tidyr
 #' @import secuTrialR
+#' @import lubridate
 #' @importFrom purrr map
 #'
 get_data <- function(){
-
+  
   #######################################################################################################################
   ###                                                     LOAD DATA                                                   ###
   #######################################################################################################################
-
+  
   data.extraction.date <- Sys.Date()
-
+  
   set.seed(12481498)
   ## Required vars: centre.short, rando_date.date
   randomized <- data.frame(pat_id = sample(c(1:100), 100),
                            centre.short = sample(c("A", "B", "C", "D", "E"), 100, replace = TRUE),
                            rando_date.date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 100))
-
+  
   ## Required vars: centre.short, rando_date.date
   randomized <- data.frame(pat_id = sample(c(1:100), 100),
                            centre.short = sample(c("A", "B", "C", "D", "E"), 100, replace = TRUE),
@@ -146,14 +147,14 @@ get_data <- function(){
   
   ## Queries df
   
-    nr.rows <- df.all %>% nrow()
-    df <- purrr::map_dfr(1:nr.rows, get_queries, df = df.all)
-    no <- df %>% nrow()
-    set.seed(12481498)
-    df.queries <- df %>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)),
-                   queryform = sample(c("Adverse events", "Diagnosis", "Biobanking", "MRI", "Laboratory"), no, replace = TRUE, prob = c(0.2, 0.2, 0.2, 0.2, 0.2)),
-                   query = sample(c("Date:Please enter a date", "Date:Event date is greater than current date", "Description: Value required"), no, replace = TRUE, prob = c(0.5, 0.3, 0.2))) %>% 
-      separate(query, c("query.field", "query"), sep = ":")
+  nr.rows <- df.all %>% nrow()
+  df <- purrr::map_dfr(1:nr.rows, get_queries, df = df.all)
+  no <- df %>% nrow()
+  set.seed(12481498)
+  df.queries <- df %>% mutate(querystatus = sample(c("answered", "open", "closed"), no, replace = TRUE, prob = c(0.5, 0.2, 0.3)),
+                              queryform = sample(c("Adverse events", "Diagnosis", "Biobanking", "MRI", "Laboratory"), no, replace = TRUE, prob = c(0.2, 0.2, 0.2, 0.2, 0.2)),
+                              query = sample(c("Date:Please enter a date", "Date:Event date is greater than current date", "Description: Value required"), no, replace = TRUE, prob = c(0.5, 0.3, 0.2))) %>% 
+    separate(query, c("query.field", "query"), sep = ":")
   
   
   locations <- data.frame(centre.short = LETTERS[1:5],
@@ -163,23 +164,23 @@ get_data <- function(){
                           target = c(35, 25, 30, 30, 30))
   
   study_params <- data.frame(acc_target = 150,
-                            study_start = as.Date('2017/12/01'))
+                             study_start = as.Date('2017/12/01'))
   
-
+  
   ## read secuTrial test data to illustrate the completeness module
   st_data = system.file("extdata/sT_exports/exp_opt/s_export_CSV-xls_CTU05_all_info.zip",
-              package = "secuTrialR") %>%
+                        package = "secuTrialR") %>%
     read_secuTrial() %>%
     magrittr::extract(c(
       "esurgeries", "baseline", "outcome", "treatment", "allmedi", "studyterminat", "ae", "sae"
     )) %>%
     map(tibble) %>%
     map(~ .x %>% select(-contains(".factor")))
-
-
-    sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
-    sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
-
+  
+  
+  sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
+  sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
+                    
                     sae_date = sample(seq(as.Date('2017/12/01'), as.Date('2022/03/01'), by="day"), 50), 
                     severity_level = sample(c("Mild", "Moderate", "Severe"), 50, replace = T), 
                     causality = sample(c("Certain", "Probable", "Possible", "Unlikely", "Not related", "Not assessable"), 50, replace = T), 
@@ -193,10 +194,17 @@ get_data <- function(){
                     sae_report_type = sample(c("Initial", "Follow-up", "Final"), 50, replace = T), 
                     sae_description = sample(sae_descr, 50, replace = T)) #?
   sae$centre.short <- sapply(sae$pat_id, function(x){randomized$centre.short[randomized$pat_id == x]})
- 
+  
   consistency <- randomized %>% 
     mutate(height = rnorm(nrow(randomized), 170, 30),
+           height_datetime = sample(seq(as.POSIXct('2019-12-01 00:01:00'), as.POSIXct('2022-03-01 23:59:00'), by="mins"), nrow(randomized)),
            weight = rnorm(nrow(randomized), 70, 30),
+           weight_datetime = sample(seq(as.POSIXct('2019-12-01 00:01:00'), as.POSIXct('2022-03-01 23:59:00'), by="mins"), nrow(randomized)),
+           fu1_date = if_else(FU1, 
+                              sample(seq(as.Date('2018/12/01'), as.Date('2023/03/01'), by="1 day"), nrow(randomized)),
+                              NA_Date_),
+           fu2_date = if_else(FU2, sample(seq(as.Date('2019/12/01'), as.Date('2024/03/01'), by="day"), nrow(randomized)), NA_Date_),
+           ended.study_date = if_else(ended.study, sample(seq(as.Date('2020/12/01'), as.Date('2025/03/01'), by="day"), nrow(randomized)), NA_Date_),
            sex = sample(c("male", "female", "unknown"), nrow(randomized), 
                         replace = TRUE),
            department = sample(c("ICU", "icu", "Icu", "Ic", "Oncology", 
@@ -204,9 +212,9 @@ get_data <- function(){
                                nrow(randomized), 
                                replace = TRUE),
            diagnosis = paste0(sample(c("This patient has",
-                                            paste0(rep("some long text", 20), collapse = " "),
-                                            paste0(rep("some shorter text", 5), collapse = " ")),
-                                            nrow(randomized), replace = TRUE),
+                                       paste0(rep("some long text", 20), collapse = " "),
+                                       paste0(rep("some shorter text", 5), collapse = " ")),
+                                     nrow(randomized), replace = TRUE),
                               sample(c(" high blood pressure ",
                                        " low blood pressure ",
                                        " lung cancer ",
@@ -221,14 +229,14 @@ get_data <- function(){
                                        paste0(rep("some long text", 20), collapse = " "),
                                        paste0(rep("some shorter text", 5), collapse = " ")),
                                      nrow(randomized), replace = TRUE)
-                              )
            )
-
-
+    )
+  
+  
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
   #######################################################################################################################
-
+  
   data <- list(
     data.extraction.date = data.extraction.date,
     randomized = randomized,
@@ -240,7 +248,7 @@ get_data <- function(){
     consistency = consistency, 
     sae = sae
   )
-
+  
   return(data)
 }
 

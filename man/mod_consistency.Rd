@@ -25,3 +25,6 @@ mod_consistency_server(input, output, session, data)
 \description{
 In development
 }
+\author{
+Silvia Grieder
+}

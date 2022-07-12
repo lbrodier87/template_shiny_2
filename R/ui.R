@@ -80,6 +80,9 @@ app_ui <- function() {
 
                     ## Body
                     dashboardBody(
+                      
+                      # Make sure the calendar input of dateRangeInput is not hidden behind the dashboard header
+                      tags$div(tags$style(HTML( ".dropdown-menu{z-index:10000 !important;}"))),
 
                       tabItems(
 
