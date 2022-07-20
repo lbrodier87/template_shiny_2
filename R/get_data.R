@@ -226,18 +226,23 @@ get_data <- function(){
   completeness <- list()
   # table sae
   set.seed(1)
+  completeness$demographics <- consistency %>% 
+    # missing completely at random (continuous variable)
+    missMethods::delete_MCAR(p = .1, cols_mis = c("weight")) %>% 
+    mutate(height = ifelse(is.na(weight), NA,height))
+  
+  # table demographics
+  set.seed(2)
   completeness$sae <- sae %>% as_tibble() %>% 
+    left_join(
+      completeness$demographics %>% select(pat_id, centre.short, rando_date.date)
+    ) %>% relocate(pat_id, centre.short, rando_date.date) %>% 
     mutate(centre.short = as.factor(centre.short)) %>% 
     # missing at random ~ centre.short (factor)
     missMethods::delete_MAR_one_group(p = .1, cols_mis = "severity_level", cols_ctrl = "centre.short") %>% 
     mutate(expectedness = ifelse(is.na(severity_level), NA, expectedness),
            causality = ifelse(is.na(severity_level), NA, causality))
-  # table demographics
-  set.seed(2)
-  completeness$demographics <- consistency %>% 
-    # missing completely at random (continuous variable)
-    missMethods::delete_MCAR(p = .1, cols_mis = c("weight")) %>% 
-    mutate(height = ifelse(is.na(weight), NA,height))
+  
   
   # table laboratory values
   set.seed(3)
@@ -249,7 +254,7 @@ get_data <- function(){
   ) %>% as_tibble
   names(inflamm_and_temperature_values) = c("index", "CRP", "body_temperatur", "white_blood_cell_count")
   set.seed(4)
-  completeness$laboratory <- completeness$demographics %>% select(pat_id) %>% 
+  completeness$laboratory <- completeness$demographics %>% select(pat_id, centre.short, rando_date.date) %>% 
     mutate(
       ALT = rnorm(nrow(completeness$demographics), mean = 18.5, sd=6),
       Albumin = rnorm(nrow(completeness$demographics), mean = 3.75, sd = .5),
@@ -272,7 +277,7 @@ get_data <- function(){
   )
   names(blood_pressure) = c("index", "diastolic_bp", "systolic_bp")
   
-  completeness$vitals <- completeness$demographics %>% select(pat_id) %>% 
+  completeness$vitals <- completeness$demographics %>% select(pat_id, centre.short, rando_date.date) %>% 
     mutate(
       systolic_bp = blood_pressure$diastolic_bp,
       diastolic_bp = blood_pressure$systolic_bp,
