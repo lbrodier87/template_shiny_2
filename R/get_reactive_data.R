@@ -5,9 +5,9 @@
 #' #@param session
 #' @return
 #' @noRd
-get_reactive_data <- function(input){
+get_reactive_data <- function(data, input){
 
-  data <- get_data()
+  # data <- get_data()
 
   random_period <- reactive(
     
@@ -25,6 +25,15 @@ get_reactive_data <- function(input){
 
     } else{
       filter(data$all, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
+    })
+  
+  completeness_period <- reactive(
+    
+    if(input$center != "All"){
+      map(data$completeness, ~filter(.x, centre.short == input$center & rando_date.date >= input$period[1] & rando_date.date <= input$period[2]))
+      
+    } else{
+      map(data$completeness, ~filter(.x, rando_date.date >= input$period[1] & rando_date.date <= input$period[2]))
     })
   
   consistency_period <- reactive(
@@ -58,6 +67,7 @@ get_reactive_data <- function(input){
   reactive_data <- list(
     rx_random = random_period,
     rx_all = all_period,
+    rx_completeness = completeness_period,
     rx_consistency = consistency_period,
     rx_all = all_period,
     rx_sae = sae_period,
