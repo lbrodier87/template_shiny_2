@@ -10,8 +10,8 @@ app_server <- function(input, output, session ) {
   mod <- get_modules()
 
   ## To get reactive data
-  rx.data <- get_reactive_data(input = input)
   data <- get_data()
+  rx.data <- get_reactive_data(data = data, input = input)
 
   callModule(mod_home_server, mod$home)
   callModule(mod_recruitment_server, mod$recruit,
@@ -29,7 +29,7 @@ app_server <- function(input, output, session ) {
   callModule(mod_retention_server, mod$retention, data)
   callModule(mod_consistency_server, mod$consistency, 
              data = rx.data$rx_consistency)
-  callModule(mod_completeness_server, mod$completeness, data = data$st_data)
+  callModule(mod_completeness_server, mod$completeness, data = rx.data$rx_completeness)
   callModule(mod_timeliness_server, mod$timeliness, data)
   callModule(mod_queries_server, mod$queries, rx.data$rx_queries)
   callModule(mod_visits_server, mod$visits, data)
