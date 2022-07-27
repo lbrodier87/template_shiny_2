@@ -2,6 +2,12 @@
 #'
 #' @param df 
 #'
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @import DT
+#' @import ggdist
+#' @import lubridate
 #' @return
 #' @export
 #'
@@ -228,8 +234,11 @@ get_data <- function(){
   set.seed(1)
   completeness$demographics <- consistency %>% 
     # missing completely at random (continuous variable)
-    missMethods::delete_MCAR(p = .1, cols_mis = c("weight")) %>% 
-    mutate(height = ifelse(is.na(weight), NA,height))
+    missMethods::delete_MCAR(p = .1, cols_mis = colnames(consistency)[c(16, 18, 23:25)]) %>% 
+    mutate(height = ifelse(is.na(weight), NA,height)) %>% 
+    mutate_if(is.logical, as.factor) %>% 
+    mutate_if(is.character, as.factor) %>% 
+    missMethods::delete_MNAR_censoring(p = .15, cols_mis = colnames(consistency)[c(7:12, 14, 15, 17, 19)])
   
   # table demographics
   set.seed(2)
@@ -241,7 +250,11 @@ get_data <- function(){
     # missing at random ~ centre.short (factor)
     missMethods::delete_MAR_one_group(p = .1, cols_mis = "severity_level", cols_ctrl = "centre.short") %>% 
     mutate(expectedness = ifelse(is.na(severity_level), NA, expectedness),
-           causality = ifelse(is.na(severity_level), NA, causality))
+           causality = ifelse(is.na(severity_level), NA, causality)) %>% 
+    missMethods::delete_MCAR(p=.12, cols_mis = c("outcome","death", "life_threatening", 
+                                                 "persistant_disability", "hospitalization", 
+                                                 "congenital_anomalia_birth_defect")) %>% 
+    mutate_if(is.character, as.factor)
   
   
   # table laboratory values
@@ -265,7 +278,13 @@ get_data <- function(){
       CRP = inflamm_and_temperature_values$CRP, white_blood_cell = inflamm_and_temperature_values$white_blood_cell_count
     ) %>%
     # missing not at random (continuous variable)
-    missMethods::delete_MNAR_censoring(p = .1, cols_mis = "CRP")
+    missMethods::delete_MNAR_censoring(p = .1, cols_mis = "CRP") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("ALT"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Albumin"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Alkaline_phosphatase"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Amylase_serum"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("AST"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("bilirubin_direct"), cols_ctrl = "centre.short")
   
   # table vitals
   set.seed(5)
@@ -282,6 +301,10 @@ get_data <- function(){
       systolic_bp = blood_pressure$diastolic_bp,
       diastolic_bp = blood_pressure$systolic_bp,
       temperatur = inflamm_and_temperature_values$body_temperatur
+    ) %>% 
+    missMethods::delete_MCAR(p = .13, cols_mis = c("systolic_bp", "temperatur")) %>% 
+    mutate(
+      diastolic_bp = ifelse(is.na(systolic_bp), NA, diastolic_bp)
     )
   
   
