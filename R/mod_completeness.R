@@ -59,7 +59,7 @@ mod_completeness_ui <- function(id, label){
                              , tabPanel(
                                # ----
                                "Overview"
-                               , tabsetPanel(
+                                , tabsetPanel(
                                  tabPanel("Variables",
                                           plotOutput(ns('vis_miss'), height = "500", width = "1200")
                                  )
@@ -188,6 +188,7 @@ mod_completeness_server <- function(input, output, session, data){
   
   # Box general info ----
   output$box_overall_missing <- renderValueBox({
+    browser()
     d = data()
     n_forms = length(d)
     n_var = purrr::map_dbl(d, ncol) %>% sum
@@ -197,7 +198,7 @@ mod_completeness_server <- function(input, output, session, data){
   })
   # Main Tab: all forms ----
   output$overview_form_missingness <- renderPlot({
-    tibble( form = names(data()), perc.miss = purrr::map_dbl(d, pct_miss) ) %>% 
+    tibble( form = names(data()), perc.miss = purrr::map_dbl(data(), pct_miss) ) %>% 
       ggplot(aes(x = form, y=perc.miss)) + geom_col() + ylim(0,100) + coord_flip() + 
       labs(x = "Forms", y = "Percentage missing") + theme_minimal() + 
       theme(
