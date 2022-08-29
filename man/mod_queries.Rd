@@ -7,7 +7,7 @@
 \usage{
 mod_queries_ui(id, label)
 
-mod_queries_server(input, output, session, data)
+mod_queries_server(input, output, session, ls.queries)
 }
 \arguments{
 \item{id}{standard shiny id argument}
