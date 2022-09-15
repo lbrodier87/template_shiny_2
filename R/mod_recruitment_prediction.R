@@ -21,15 +21,15 @@ mod_recruitment_prediction_ui <- function(id, label) {
         id = "tabset1", height = "450px",
         selected = "Predicted end date by site",
         tabPanel("Predicted end date by site",
-          plotlyOutput(ns("predictplot_site"), height = "400"),
-          tags$br()
+                 plotlyOutput(ns("predictplot_site"), height = "400"),
+                 tags$br()
         ),
         tabPanel("Predicted end date using different target definitions",
-          selectInput(ns("filter_add"), "Choose definition for accrual target", choices = c("At least 1 QoL done", "FU1 performed"), selected = "None"),
-          tags$br(),
-          plotlyOutput(ns("predictplot"), height = "400"),
-          tags$br(),
-          gt::gt_output(ns('recruittable'))
+                 selectInput(ns("filter_add"), "Choose definition for accrual target", choices = c("At least 1 QoL done", "FU1 performed"), selected = "None"),
+                 tags$br(),
+                 plotlyOutput(ns("predictplot"), height = "400"),
+                 tags$br(),
+                 gt::gt_output(ns('recruittable'))
         )
       )
     )
@@ -49,44 +49,76 @@ mod_recruitment_prediction_ui <- function(id, label) {
 mod_recruitment_prediction_server <- function(input, output, session, data.randomized, locations, centers, study_params, all_data) {
   ns <- session$ns
 
-  acc <- reactive({
-    accrualPlot::accrual_create_df(data.randomized()$rando_date.date,
-                                   by = factor(data.randomized()$centre.short, locations()$centre.short))
-  })
+    acc <- reactive({
+      if (nlevels(factor(data.randomized()$centre.short))==1)
+      {
+        # if only 1 center is chosen, accrual_create_df() should be used without the "by" parameter
+        # otherwise we get in trouble with the overall df that is created even for one site
+        tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date)
+      } else {
+        tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date,
+                                            by = factor(data.randomized()$centre.short)
+        )
+      }
+        return(tmp)
+    })
   
+    # accrual dataframe for tab with with different target definitions
   acc_qol <- reactive({
     if (input$filter_add == "At least 1 QoL done")
       tmp <- filter(data.randomized(), bl.qol.done == TRUE)
     if (input$filter_add == "FU1 performed")
       tmp <- filter(data.randomized(), FU1 == TRUE)
     
-      accrualPlot::accrual_create_df(tmp$rando_date.date,
-                                   by = factor(tmp$centre.short, locations()$centre.short))
+      if (nlevels(factor(data.randomized()$centre.short))==1)
+      {
+        x <- accrualPlot::accrual_create_df(tmp$rando_date.date)
+      } else {
+        x <- accrualPlot::accrual_create_df(tmp$rando_date.date,
+                                            by = factor(tmp$centre.short)
+        )
+      }
+      return(x)
   })
   
   target <- reactive({
-    centers_filtered <- centers %>%
-      filter(centre.short %in% names(acc()))
-    
-    target_vec <- centers_filtered$target
-    names(target_vec) <- centers_filtered$centre.short
-    
+    if (nlevels(factor(data.randomized()$centre.short))==1)
+    {
+      centers_filtered <- centers %>%
+      filter(centre.short %in% levels(factor(data.randomized()$centre.short)))
+             
+      target_vec <- centers_filtered$target
+      } else {
+        centers_filtered <- centers %>%
+          filter(centre.short %in% names(acc()))
+        target_vec <- centers_filtered$target
+        names(target_vec) <- centers_filtered$centre.short
+      }
+
     return(target_vec)
   })
   
+  # target vector for tab with with different target definitions
   target_qol <- reactive({
-    centers_filtered <- centers %>%
-      filter(centre.short %in% names(acc_qol()))
-    
-    target_vec <- centers_filtered$target_qol
-    names(target_vec) <- centers_filtered$centre.short
+    if (nlevels(factor(data.randomized()$centre.short))==1)
+    {
+      centers_filtered <- centers %>%
+        filter(centre.short %in% levels(factor(data.randomized()$centre.short)))
+      
+      target_vec <- centers_filtered$target
+    } else {
+      centers_filtered <- centers %>%
+        filter(centre.short %in% names(acc_qol()))
+      # message(paste(" -> centers_filtered: ", centers_filtered))
+      target_vec <- centers_filtered$target
+      names(target_vec) <- centers_filtered$centre.short
+    }
     
     return(target_vec)
   })
   
   ## Prediction plot by site
   output$predictplot_site <- renderPlotly({
-
     p <- accrualPlot::gg_accrual_plot_predict(acc(), target = target()) +
       theme_bw() +
       scale_x_date(labels = function(x) format(x, format = "%d %b %Y"))
