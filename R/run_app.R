@@ -11,3 +11,4 @@ run_app <- function(){
   shiny_app <- shiny::shinyApp(ui = app_ui, server = app_server)
   return(shiny_app)
 }
+
