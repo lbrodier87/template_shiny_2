@@ -19,8 +19,9 @@ mod_completeness_ui <- function(id, label){
             )
             , fluidRow(
               tabsetPanel(
+                selected = "Completeness all forms"
                 # Main Tab: all forms ----
-                tabPanel(
+                , tabPanel(
                   "Completeness all forms"
                   , tabsetPanel(
                     tabPanel(
@@ -51,7 +52,7 @@ mod_completeness_ui <- function(id, label){
                            title = "",
                            id = "tabset3",
                            height = "850px",
-                           selected = ""
+                           selected = "Overview"
                            # TAB: Overview ----
                            , tabPanel(
                              # ----
@@ -60,7 +61,8 @@ mod_completeness_ui <- function(id, label){
                                # ----
                                "Overview"
                                 , tabsetPanel(
-                                 tabPanel("Variables",
+                                  selected = "Variables"
+                                 , tabPanel("Variables",
                                           plotOutput(ns('vis_miss'), height = "500", width = "1200")
                                  )
                                  , tabPanel("Variable missingness",
@@ -70,15 +72,21 @@ mod_completeness_ui <- function(id, label){
                                             plotlyOutput(ns('case_miss'), height = "500", width = "1200")
                                  )
                                  , tabPanel("Missingness pattern",
+                                            h4("Explore pattern of co-occurrence of missing values between variables"),
+                                            column(width = 1),
                                             column(
-                                              width = 3,
-                                              uiOutput(ns("nset_slider_out")),
-                                              uiOutput(ns("upset_text_scale_out"))
+                                              width = 12,
+                                              fluidRow(
+                                                # width = 3,
+                                                uiOutput(ns("nset_slider_out")),
+                                                uiOutput(ns("upset_text_scale_out"))
+                                              )
+                                              , fluidRow(
+                                                # width = 9,
+                                                plotOutput(ns('miss_pattern'), height = "500")
+                                              )
                                             )
-                                            , column(
-                                              width = 9,
-                                              plotOutput(ns('miss_pattern'), height = "500")
-                                            )
+                                            
                                  )
                                )
                              )
@@ -183,12 +191,12 @@ mod_completeness_server <- function(input, output, session, data){
     , axis.title.x = element_text(size = 14)
     , axis.text.y = element_text(size = 12)
     , axis.title.y = element_text(size = 14)
+    , legend.position = "bottom"
     , legend.text = element_text(size = 12)
     )
   
   # Box general info ----
   output$box_overall_missing <- renderValueBox({
-    browser()
     d = data()
     n_forms = length(d)
     n_var = purrr::map_dbl(d, ncol) %>% sum
@@ -268,12 +276,13 @@ mod_completeness_server <- function(input, output, session, data){
   output$case_miss <- renderPlotly({
     p <- form_selected() %>% gg_miss_case(show_pct = TRUE) + labs(x = "Patients") 
     ggplotly(p)
-  })
+  }) 
   
   output$nset_slider_out <- renderUI({
     
     sliderInput(ns("nset_slider_in"),
-                "Choose number of sets to display:",
+                "Choose number of variable to plot:\n
+                (selected by decreasing order of percentage of missing values, min = 2, max = number of variables with missing values)\n",
                 min = 2,
                 max = ncol( form_selected() ),
                 value = 10,
@@ -285,7 +294,7 @@ mod_completeness_server <- function(input, output, session, data){
   output$upset_text_scale_out <- renderUI({
     
     sliderInput(ns("upset_text_scale_in"),
-                "Choose text scale:",
+                "Choose variable name size:",
                 min =1,
                 max = 5,
                 value = 2,
@@ -305,7 +314,7 @@ mod_completeness_server <- function(input, output, session, data){
   # TAB: Missigness_relationship ----
   # Sub-TAB:  % missingness ~ fct variables ----
   output$fct_for_display_out <- renderUI({
-    # browser()
+    
     selectInput(
       inputId = ns("fct_of_interest")
       ,label = "Factor variable selected for grouping:"
@@ -332,14 +341,14 @@ mod_completeness_server <- function(input, output, session, data){
         gg_miss_fct(
           x = form_selected() %>% select(!!!syms(c(input$fct_of_interest, input$variable_missingness_against_factor_in)))
           , fct = !!sym(input$fct_of_interest)
-          ) + ylab("")
-      )
+          ) + ylab("") + theme(legend.position = "bottom")
+      ) %>% layout(legend = list(orientation = "h", x = 0.4, y = -0.2))
     }
   })
   
   # Sub-TAB: missingness ~ date ----
   output$date_for_display_out <- renderUI({
-    # browser()
+    
     selectInput(
       inputId = ns("date_variable_of_interest")
       ,label = "Date variable selected:"
@@ -367,7 +376,7 @@ mod_completeness_server <- function(input, output, session, data){
           x = form_selected() %>% select(!!!syms(c(input$date_variable_of_interest, input$variable_missingness_against_factor_in_2))),
           fct = !!sym(input$date_variable_of_interest)
           ) + ylab("")
-      )  
+      ) %>% layout(legend = list(orientation = "h", x = 0.4, y = -0.2))  
       
     }
   })
