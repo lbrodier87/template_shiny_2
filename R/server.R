@@ -23,7 +23,8 @@ app_server <- function(input, output, session ) {
              dat = rx.data$rx_random, locations = data$locations)
   callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
              data.randomized = rx.data$rx_random, 
-             locations = data$locations, 
+             locations = rx.data$rx_locations, 
+             centers = data$centers,
              study_params = data$study_params,
              all_data = data$randomized)
   callModule(mod_retention_server, mod$retention, data)
