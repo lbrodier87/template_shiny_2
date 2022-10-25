@@ -10,8 +10,8 @@ app_server <- function(input, output, session ) {
   mod <- get_modules()
 
   ## To get reactive data
-  rx.data <- get_reactive_data(input = input)
   data <- get_data()
+  rx.data <- get_reactive_data(data = data, input = input)
 
   callModule(mod_home_server, mod$home)
   callModule(mod_recruitment_server, mod$recruit,
