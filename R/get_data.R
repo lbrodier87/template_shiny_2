@@ -167,12 +167,18 @@ get_data <- function(){
                           long = c(6.5848, 8.9857, 8.9632, 7.4688, 10.2411),
                           lat = c(46.5980, 46.0868, 47.1502, 47.3604, 46.6630),
                           monthly = c(2,1,2,1,5),
-                          target = c(35, 25, 30, 30, 30))
+                          target = c(25, 35, 30, 30, 30))
   
   study_params <- data.frame(acc_target = 150,
                              study_start = as.Date('2017/12/01'))
   
-
+  centers <- data.frame(centre.short = c(LETTERS[1:5], "Overall"),
+                        monthly = c(2,1,2,1,5,11),
+                        target = c(25, 35, 30, 30, 30, 150),
+                        target_qol = c(20, 30, 25, 25, 25, 125),
+                        target_fu1 = c(15, 25, 20, 20, 20, 100))
+  
+  
   sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
   sae <- data.frame(pat_id = sample(randomized$pat_id, 50, replace = T),
                     
@@ -320,6 +326,7 @@ get_data <- function(){
     queries = df.queries,
     locations = locations,
     completeness = completeness,
+    centers = centers,
     study_params = study_params,
     consistency = consistency, 
     sae = sae

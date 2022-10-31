@@ -53,6 +53,23 @@ get_reactive_data <- function(data, input){
       filter(data$sae, sae_date >= input$period[1] & sae_date <= input$period[2])
     }
   )
+  locations_filtered <- reactive({
+    if(input$center != "All"){
+      tmp <- filter(data$locations, centre.short == input$center)
+    } else {
+      tmp <- data$locations
+    }
+    return(tmp)
+  })
+  
+  # missing_period <- reactive(
+  #   
+  #   if(input$center != "All"){
+  #     filter(data$missing, centre.short == input$center & rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
+  #     
+  #   } else{
+  #     filter(data$missing, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
+  #   })
 
   queries_period <- reactive(
     
@@ -63,6 +80,7 @@ get_reactive_data <- function(data, input){
       filter(data$queries, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
   })
 
+
   ## Save reactive datafranes into list
   reactive_data <- list(
     rx_random = random_period,
@@ -72,6 +90,8 @@ get_reactive_data <- function(data, input){
     rx_all = all_period,
     rx_sae = sae_period,
     rx_queries = queries_period
+    , rx_locations = locations_filtered
+
   )
 
   return(reactive_data)
