@@ -28,11 +28,11 @@ app_ui <- function() {
                     dashboardSidebar(
 
                       tags$head(tags$style(HTML('.logo {
-                              background-color: #1ea5a5 !important;
+                              background-color:#ba1e2b !important;
 
                               }
                               .navbar {
-                              background-color: #1ea5a5  !important;
+                              background-color: #ba1e2b  !important;
 
                               }
 
@@ -46,7 +46,7 @@ app_ui <- function() {
                         menuItem("Home", tabName = mod$home, icon = icon("home")),
 
                         ## Overview tab
-                        menuItem("Performance measures", startExpanded = TRUE,
+                        # menuItem("Performance measures", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
                                  menuItem("Recruitment", tabName = mod$recruit, icon = icon("chart-line")),
                                  menuItem("Recruitment (accrualPlot)", tabName = mod$recruit2, icon = icon("chart-line")),
@@ -57,8 +57,9 @@ app_ui <- function() {
                                           menuItem("Completeness", tabName = mod$completeness),
                                           menuItem("Consistency", tabName = mod$consistency),
                                           menuItem("Timeliness", tabName = mod$timeliness),
-                                          menuItem("Queries", tabName = mod$queries))),
-                        menuItem("Study management", startExpanded = TRUE,
+                                          menuItem("Queries", tabName = mod$queries)),
+                                 # ),
+                        # menuItem("Study management", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
                                  menuItem("Follow-up visits", tabName = mod$visits, icon = icon("clinic-medical")),
                                  menuItem("Participant characteristics", tabName = mod$participant, icon = icon("address-card")),
@@ -67,7 +68,8 @@ app_ui <- function() {
                                           menuItem("Adverse events", tabName = mod$ae),
                                           menuItem("Annual safety report", tabName = mod$asr)
 
-                                          )),
+                                          ),
+                                 # ),
 
                         ## Date range filter
                         dateRangeInput("period", "Randomization date:",
