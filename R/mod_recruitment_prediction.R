@@ -41,21 +41,21 @@ mod_recruitment_prediction_ui <- function(id, label) {
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data.randomized reactive data containing randomization info
-#' @param locations parameters on site level
 #' @param centers parameters on site level incl. overall (needed for gg_accrual_plot_predict with targets)
-#' @param study_params general study parameter
-#' @param all_data non reactive data 
 
-mod_recruitment_prediction_server <- function(input, output, session, data.randomized, locations, centers, study_params, all_data) {
+mod_recruitment_prediction_server <- function(input, output, session, data.randomized, centers) {
   ns <- session$ns
 
     acc <- reactive({
       if (nlevels(factor(data.randomized()$centre.short))==1)
       {
+        message(paste(" -> mod_recruitment_prediction, data.randomized() if: ", data.randomized()))
         # if only 1 center is chosen, accrual_create_df() should be used without the "by" parameter
         # otherwise we get in trouble with the overall df that is created even for one site
         tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date)
+        message(paste(" -> mod_recruitment_prediction, tmp: ", tmp))
       } else {
+        message(paste(" -> mod_recruitment_prediction, data.randomized() else: ", data.randomized()))
         tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date,
                                             by = factor(data.randomized()$centre.short)
         )
@@ -119,6 +119,7 @@ mod_recruitment_prediction_server <- function(input, output, session, data.rando
   
   ## Prediction plot by site
   output$predictplot_site <- renderPlotly({
+    # message(paste(" -> acc: ", acc()))
     p <- accrualPlot::gg_accrual_plot_predict(acc(), target = target()) +
       theme_bw() +
       scale_x_date(labels = function(x) format(x, format = "%d %b %Y"))
