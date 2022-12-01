@@ -23,7 +23,8 @@ app_server <- function(input, output, session ) {
   # message(paste(" -> server, rx.rc_data: ", rx.rc_data))
   # message(paste(" -> server, data$centers$centre.short: ", data$centers$centre.short))
   # message(paste(" -> server, rc_data$centers_overall$centre.short: ", rc_data$centers_overall$centre.short))
-  # message(paste(" -> server, rx.rc_data: ", rx.rc_data))
+ 
+   # message(paste(" -> server, rx.rc_data: ", rx.rc_data))
   
   # nok
   # message(paste(" -> server, rx.rc_data$rx_eligibility: ", rx.rc_data$rx_eligibility))

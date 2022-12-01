@@ -316,26 +316,20 @@ get_rc_data <- function(){
   # add labels, make factors, etc (can be slow...)
   forms_prepped <- sapply(forms, rc_prep, metadata = meta$metadata)
   
-  # Alan: Doing this for only 1 df works, but not the sapply below for al dfs...
-  # add centre.id and centre.name
+  # add center ID to all forms in forms_prepped
+  forms_prepped_dag_id <- sapply(forms_prepped, 
+                                 function(x){
+                                   if(!is.null(x)){
+                                     x %>% mutate(dag = substr(record_id, 1, 4) ) %>% 
+                                       left_join(centers, by = c("dag" = "centre.id"))
+                                   }
+                                   })
+  
+  # rename to adjust to mock data
   forms_prepped$randomization <- forms_prepped$randomization %>% 
-    mutate(centre.id = substr(record_id, 1, 4)) %>% 
-    left_join(centers, by = "centre.id") %>% 
-    # rename to adjust to mock data
     rename("rando_date.date" = rando_date_date)
   names(forms_prepped)[2] <- "randomized"
   
- 
-  forms_prepped$eligibility <- forms_prepped$eligibility %>% 
-    mutate(centre.id = substr(record_id, 1, 4)) %>% 
-    left_join(centers, by = "centre.id")
-  
-  # # Alan: this does not yet work... Why?
-  # # add center ID to all forms in forms_prepped
-  # forms_prepped_dag_id <- sapply(forms_prepped, function(x){x %>% mutate(dag = substr(record_id, 1, 4) )})
-  # # add center name to all forms
-  # forms_prepped_center <- map(forms_prepped, function(x) left_join(x, center_id, by = c("dag", "data_access_group_id")))
-
   # Option:
   # export as single dataset (suitable for projects without a visit structure) ----
   # records <- redcap_export_tbl(token = token, url = url, content = "record")

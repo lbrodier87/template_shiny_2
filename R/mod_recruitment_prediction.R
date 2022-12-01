@@ -49,13 +49,15 @@ mod_recruitment_prediction_server <- function(input, output, session, data.rando
     acc <- reactive({
       if (nlevels(factor(data.randomized()$centre.short))==1)
       {
-        message(paste(" -> mod_recruitment_prediction, data.randomized() if: ", data.randomized()))
+        message(" -> mod_recruitment_prediction, data.randomized() if: ")
+        message(head(data.randomized()))
         # if only 1 center is chosen, accrual_create_df() should be used without the "by" parameter
         # otherwise we get in trouble with the overall df that is created even for one site
         tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date)
-        message(paste(" -> mod_recruitment_prediction, tmp: ", tmp))
+        # message(paste(" -> mod_recruitment_prediction, tmp: ", tmp))
       } else {
-        message(paste(" -> mod_recruitment_prediction, data.randomized() else: ", data.randomized()))
+        message(" -> mod_recruitment_prediction, data.randomized() else: ")
+        message(head(data.randomized()))
         tmp <- accrualPlot::accrual_create_df(data.randomized()$rando_date.date,
                                             by = factor(data.randomized()$centre.short)
         )
