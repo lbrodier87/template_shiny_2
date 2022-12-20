@@ -274,6 +274,7 @@ get_rc_data <- function(){
   # define center & study data using REDCap DAG ID----
   study_params <- data.frame(acc_target = 150,
                              acc_monthly = 11,
+                             target = 250,
                              target_qol = 125,
                              target_fu1 = 100,
                              study_start = as.Date('2017/12/01'))
@@ -317,7 +318,7 @@ get_rc_data <- function(){
   forms_prepped <- sapply(forms, rc_prep, metadata = meta$metadata)
   
   # add center ID to all forms in forms_prepped
-  forms_prepped_dag_id <- sapply(forms_prepped, 
+  forms_prepped <- sapply(forms_prepped, 
                                  function(x){
                                    if(!is.null(x)){
                                      x %>% mutate(dag = substr(record_id, 1, 4) ) %>% 

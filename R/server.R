@@ -40,13 +40,13 @@ app_server <- function(input, output, session ) {
   callModule(mod_recruitment_map_server, mod$recruitmap,
              dat = rx.data$rx_random, locations = data$locations)
   # mock data
-  # callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
-  #            data.randomized = rx.data$rx_random,
-  #            centers = data$centers)
-  # REDCap data
   callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
-             data.randomized = rx.rc_data$rx_random,
-             centers = rx.rc_data$rx_locations)
+             data.randomized = rx.data$rx_random,
+             centers = data$centers)
+  # REDCap data
+  # callModule(mod_recruitment_prediction_server, mod$recruitment_prediction,
+  #            data.randomized = rx.rc_data$rx_random,
+  #            centers = rx.rc_data$rx_locations)
   callModule(mod_retention_server, mod$retention, data)
   callModule(mod_consistency_server, mod$consistency, 
              data = rx.data$rx_consistency)

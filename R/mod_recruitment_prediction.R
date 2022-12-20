@@ -91,6 +91,8 @@ mod_recruitment_prediction_server <- function(input, output, session, data.rando
              
       target_vec <- centers_filtered$target
       } else {
+        # TODO
+        # with mock data, centers has to be without brackets, for REDCap data with brackets??
         centers_filtered <- centers %>%
           filter(centre.short %in% names(acc()))
         target_vec <- centers_filtered$target
