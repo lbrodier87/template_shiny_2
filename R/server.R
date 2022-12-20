@@ -13,23 +13,9 @@ app_server <- function(input, output, session ) {
   data <- get_data()
   rx.data <- get_reactive_data(data = data, input = input)
 
-  ## To get reactive REDCap data
-  rc_data <- get_rc_data()
-  rx.rc_data <- get_reactive_rc_data(data = rc_data, input = input)
-  
-  # ok
-  # message(paste(" -> server, rc_data$centers: ", rc_data$centers))
-  # message(paste(" -> server, rx.data: ", rx.data))
-  # message(paste(" -> server, rx.rc_data: ", rx.rc_data))
-  # message(paste(" -> server, data$centers$centre.short: ", data$centers$centre.short))
-  # message(paste(" -> server, rc_data$centers_overall$centre.short: ", rc_data$centers_overall$centre.short))
- 
-   # message(paste(" -> server, rx.rc_data: ", rx.rc_data))
-  
-  # nok
-  # message(paste(" -> server, rx.rc_data$rx_eligibility: ", rx.rc_data$rx_eligibility))
-  # message(paste(" -> server, rx.rc_data$rx_random: ", rx.rc_data$rx_random))
-  
+  # ## To get reactive REDCap data
+  # rc_data <- get_rc_data()
+  # rx.rc_data <- get_reactive_rc_data(data = rc_data, input = input)
 
   callModule(mod_home_server, mod$home)
   callModule(mod_recruitment_server, mod$recruit,
