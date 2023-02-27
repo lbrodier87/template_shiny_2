@@ -15,7 +15,7 @@ mod_completeness_ui <- function(id, label){
           tabsetPanel(
             # Box general info----
             fluidRow(
-              valueBoxOutput(ns("box_overall_missing"), width = 6) 
+              valueBoxOutput(ns("box_overall_missing"), width = 7) 
             )
             , fluidRow(
               tabsetPanel(
