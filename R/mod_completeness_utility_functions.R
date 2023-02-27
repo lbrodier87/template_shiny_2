@@ -14,6 +14,7 @@
 #' @examples
 prepare_choice_options = function(df) {
   choices = colnames(df)
+  df = df %>% mutate_if(is.POSIXct, as_date)
   names(choices) = paste0( colnames(df), " (", map(df, class), ")")
   return(choices)
 }
