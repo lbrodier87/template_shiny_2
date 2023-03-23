@@ -64,10 +64,8 @@ mod_sae_ui <- function(id, label){
                               column(6, h3("Histogram of the nb of SAE:"), plotlyOutput(ns("sae_histogram_3")))
                             ),
                             fluidRow(
-                              column(12, h3("Number of events by patient (violin)"), plotlyOutput(ns("sae_violin_1")))
-                            ), 
-                            fluidRow(
-                              column(12, h3("Number of events by patient (boxplot)"), plotlyOutput(ns("sae_boxplot_1")))
+                              column(6, h3("Number of events by patient (violin)"), plotlyOutput(ns("sae_violin_1"))),
+                              column(6, h3("Number of events by patient (boxplot)"), plotlyOutput(ns("sae_boxplot_1")))
                             ),
                             fluidRow(
                               column(12, h3("Table of the number of events by patient"), tableOutput(ns("sae_nb_table")))
@@ -76,10 +74,15 @@ mod_sae_ui <- function(id, label){
                    tabPanel(width=12, "AE/SAE follow-up",
                             p("in devel... first preview with non reactive sT data"),
                             fluidRow(
-                              column(12, h3("SAE follow-up (violin)"), plotlyOutput(ns("sae_fu_violin_2")))
-                            ), 
+                              column(12, h3("Histogram of the number of FU for events (AE+SAE) by patient"), plotlyOutput(ns("sae_fu_histogram_1")))
+                            ),
                             fluidRow(
-                              column(12, h3("SAE follow-up (boxplot)"), plotlyOutput(ns("sae_fu_boxplot_2")))
+                              column(6, h3("Histogram of the nb of FU for AE"), plotlyOutput(ns("sae_fu_histogram_2"))),
+                              column(6, h3("Histogram of the nb of FU for SAE:"), plotlyOutput(ns("sae_fu_histogram_3")))
+                            ),
+                            fluidRow(
+                              column(6, h3("SAE follow-up (violin)"), plotlyOutput(ns("sae_fu_violin_2"))),
+                              column(6, h3("SAE follow-up (boxplot)"), plotlyOutput(ns("sae_fu_boxplot_2")))
                             ), 
                             fluidRow(
                               column(12, h3("Table of the number SAE follow-up"), tableOutput(ns("sae_fu_table")))
@@ -490,7 +493,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
     return(m_nbfu)
   })
   
-  #plots histogram
+  #plots histogram distribution
   output$sae_histogram_1 <- renderPlotly({
     g <- ggplot(data=nb_event_by_patient_melt()[nb_event_by_patient_melt()$aesae == 'nb.event',]) + 
       geom_histogram(aes(x=count), fill=color_aesae, binwidth = 0.5) +
@@ -515,7 +518,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
       scale_x_continuous(breaks = seq(0, sum(nb_event_by_patient_melt()$count), by = 1), minor_breaks = 0)
     ggplotly(g, tooltip = NULL)
   })
-  #plots distribution
+  #plots violin + boxplot distribution
   output$sae_violin_1 <- renderPlotly({
     g <- ggplot(data=nb_event_by_patient_melt(), aes(x=label, y=count, color=label, fill=label)) + 
       geom_violin(alpha=0.1) + 
@@ -560,7 +563,32 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_nb_table <- renderTable({
     return(nb_event_by_patient())
   })
-  #plots FU
+  #plots histogram FU
+  output$sae_fu_histogram_1 <- renderPlotly({
+    g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.event',]) + 
+      geom_histogram(aes(x=count), fill=color_aesae, binwidth = 0.5) +
+      theme_bw() + labs(x="nb of follow-ups", y="nb of events (AE/SAE)") + 
+      scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
+      scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
+    ggplotly(g, tooltip = NULL)
+  })
+  output$sae_fu_histogram_2 <- renderPlotly({
+    g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.ae',]) + 
+      geom_histogram(aes(x=count), fill=color_ae, binwidth = 0.5) +
+      theme_bw() + labs(x="nb of follow-ups", y="nb of AE") + 
+      scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
+      scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
+    ggplotly(g, tooltip = NULL)
+  })
+  output$sae_fu_histogram_3 <- renderPlotly({
+    g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.sae',]) + 
+      geom_histogram(aes(x=count), fill=color_sae, binwidth = 0.5) +
+      theme_bw() + labs(x="nb of follow-ups", y="nb of SAE") + 
+      scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
+      scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
+    ggplotly(g, tooltip = NULL)
+  })
+  #plots violin + boxplot FU
   output$sae_fu_violin_2 <- renderPlotly({
     g <- ggplot(data=nb_fu_by_aeid_melt(), aes(x=label, y=count, color=label, fill=label)) + 
       geom_jitter(aes(color=label, text=paste0("Patient ID: ", mnpaid, "<br>AE ID: ", mnpaeid, "<br>nb follow-up: ", count)), 
