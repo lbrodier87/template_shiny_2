@@ -3,10 +3,11 @@
 #' @import lubridate
 #' @import shiny
 #' @import shinydashboard
+#' @import shinymanager
 #'
 #' @noRd
 
-app_ui <- function() {
+app_ui <- function(request) {
 
 
 
@@ -111,5 +112,6 @@ app_ui <- function() {
 
 
 }
+app_ui <- shinymanager::secure_app(app_ui, enable_admin = TRUE)
 
 

@@ -13,84 +13,90 @@
 mod_sae_ui <- function(id, label){
   ns <- NS(id)
   tabItem(tabName = label,
-          fluidRow(
-            # SAE filters (for all tabs)
-            box(width = 12,
-              #Filters choices are generated on server side, based on dataset content
-              fluidRow( 
-                p(style="padding-left:15px", "Filter SAE by characteristics: delete those that do not apply."),
-                column(4, uiOutput(ns("sae_filter_report_type_ui"))), 
-                column(4, uiOutput(ns("sae_filter_severity_ui"))),
-                column(4, uiOutput(ns("sae_filter_expectedness_ui")))
-              ),
-              fluidRow( 
-                column(6, uiOutput(ns("sae_filter_outcome_ui"))), 
-                column(6, uiOutput(ns("sae_filter_causality_ui")))
-              )
-            ),
-            
-            # Tabs with plots
-            tabBox(width = 12,
-                   title = "",
-                   id = "tabset2",
-                  
-                   tabPanel("SAE occurence overtime", 
-                            h2("Cummulative SAE occurence overtime:"),
-                            plotlyOutput(ns("sae_plot_1")), 
-                            br(),
-                            h2("Cummulative SAE occurence overtime by center:"),
-                            plotlyOutput(ns("sae_plot_2"))
-                            ),
-                   tabPanel("SAE number by characteristics", 
-                            h2("SAE number by center and by characteristics: "), 
-                            uiOutput(ns("sae_fact_sel_ui")),
-                            plotlyOutput(ns("sae_plot_3")), 
-                            br(),
-                            h2("SAE count table:"), 
-                            uiOutput(ns("sae_table_detail_var_ui")), 
-                            tableOutput(ns("sae_table")),
-                            ), 
-                   tabPanel(width=12, "SAE list",
-                            h2("SAE list:"),
-                            div(DT::dataTableOutput(ns("sae_table_1")), style = "font-size: 90%; width: 100%")
-                            ),
-                   tabPanel(width=12, "AE/SAE distribution",
-                            p("in devel... first preview with non reactive sT data"),
-                            fluidRow(
-                              column(12, h3("Histogram of the number of events (AE+SAE) by patient"), plotlyOutput(ns("sae_histogram_1")))
-                            ),
-                            fluidRow(
-                              column(6, h3("Histogram of the nb of AE"), plotlyOutput(ns("sae_histogram_2"))),
-                              column(6, h3("Histogram of the nb of SAE:"), plotlyOutput(ns("sae_histogram_3")))
-                            ),
-                            fluidRow(
-                              column(6, h3("Number of events by patient (violin)"), plotlyOutput(ns("sae_violin_1"))),
-                              column(6, h3("Number of events by patient (boxplot)"), plotlyOutput(ns("sae_boxplot_1")))
-                            ),
-                            fluidRow(
-                              column(12, h3("Table of the number of events by patient"), tableOutput(ns("sae_nb_table")))
-                            )
-                   ),
-                   tabPanel(width=12, "AE/SAE follow-up",
-                            p("in devel... first preview with non reactive sT data"),
-                            fluidRow(
-                              column(12, h3("Histogram of the number of FU (AE+SAE FU) by event"), plotlyOutput(ns("sae_fu_histogram_1")))
-                            ),
-                            fluidRow(
-                              column(6, h3("Histogram of the nb of AE FU by event"), plotlyOutput(ns("sae_fu_histogram_2"))),
-                              column(6, h3("Histogram of the nb of SAE FU by event:"), plotlyOutput(ns("sae_fu_histogram_3")))
-                            ),
-                            fluidRow(
-                              column(6, h3("SAE follow-up (violin)"), plotlyOutput(ns("sae_fu_violin_2"))),
-                              column(6, h3("SAE follow-up (boxplot)"), plotlyOutput(ns("sae_fu_boxplot_2")))
-                            ), 
-                            fluidRow(
-                              column(12, h3("Table of the number SAE follow-up"), tableOutput(ns("sae_fu_table")))
-                            )
-                   )
-            )
+          tabsetPanel(id = ns("switcher"), type="hidden", 
+                      tabPanelBody("loading", icon('transfer', lib = 'glyphicon'), HTML('&nbsp;&nbsp;'), "loading... ", ),
+                      tabPanelBody("not_authorized", icon("lock", "fa-2x"), HTML('&nbsp;&nbsp;'), "You are not authorized to access this module."), 
+                      tabPanelBody("authorized", 
+                                    fluidRow(
+                                      # SAE filters (for all tabs)
+                                      box(width = 12,
+                                        #Filters choices are generated on server side, based on dataset content
+                                        fluidRow( 
+                                          p(style="padding-left:15px", "Filter SAE by characteristics: delete those that do not apply."),
+                                          column(4, uiOutput(ns("sae_filter_report_type_ui"))), 
+                                          column(4, uiOutput(ns("sae_filter_severity_ui"))),
+                                          column(4, uiOutput(ns("sae_filter_expectedness_ui")))
+                                        ),
+                                        fluidRow( 
+                                          column(6, uiOutput(ns("sae_filter_outcome_ui"))), 
+                                          column(6, uiOutput(ns("sae_filter_causality_ui")))
+                                        )
+                                      ),
+                                      
+                                      # Tabs with plots
+                                      tabBox(width = 12,
+                                             title = "",
+                                             id = "tabset2",
+                                            
+                                             tabPanel("SAE occurence overtime", 
+                                                      h2("Cummulative SAE occurence overtime:"),
+                                                      plotlyOutput(ns("sae_plot_1")), 
+                                                      br(),
+                                                      h2("Cummulative SAE occurence overtime by center:"),
+                                                      plotlyOutput(ns("sae_plot_2"))
+                                                      ),
+                                             tabPanel("SAE number by characteristics", 
+                                                      h2("SAE number by center and by characteristics: "), 
+                                                      uiOutput(ns("sae_fact_sel_ui")),
+                                                      plotlyOutput(ns("sae_plot_3")), 
+                                                      br(),
+                                                      h2("SAE count table:"), 
+                                                      uiOutput(ns("sae_table_detail_var_ui")), 
+                                                      tableOutput(ns("sae_table")),
+                                                      ), 
+                                             tabPanel(width=12, "SAE list",
+                                                      h2("SAE list:"),
+                                                      div(DT::dataTableOutput(ns("sae_table_1")), style = "font-size: 90%; width: 100%")
+                                                      ),
+                                             tabPanel(width=12, "AE/SAE distribution",
+                                                      p("in devel... first preview with non reactive sT data"),
+                                                      fluidRow(
+                                                        column(12, h3("Histogram of the number of events (AE+SAE) by patient"), plotlyOutput(ns("sae_histogram_1")))
+                                                      ),
+                                                      fluidRow(
+                                                        column(6, h3("Histogram of the nb of AE"), plotlyOutput(ns("sae_histogram_2"))),
+                                                        column(6, h3("Histogram of the nb of SAE:"), plotlyOutput(ns("sae_histogram_3")))
+                                                      ),
+                                                      fluidRow(
+                                                        column(6, h3("Number of events by patient (violin)"), plotlyOutput(ns("sae_violin_1"))),
+                                                        column(6, h3("Number of events by patient (boxplot)"), plotlyOutput(ns("sae_boxplot_1")))
+                                                      ),
+                                                      fluidRow(
+                                                        column(12, h3("Table of the number of events by patient"), tableOutput(ns("sae_nb_table")))
+                                                      )
+                                             ),
+                                             tabPanel(width=12, "AE/SAE follow-up",
+                                                      p("in devel... first preview with non reactive sT data"),
+                                                      fluidRow(
+                                                        column(12, h3("Histogram of the number of FU (AE+SAE FU) by event"), plotlyOutput(ns("sae_fu_histogram_1")))
+                                                      ),
+                                                      fluidRow(
+                                                        column(6, h3("Histogram of the nb of AE FU by event"), plotlyOutput(ns("sae_fu_histogram_2"))),
+                                                        column(6, h3("Histogram of the nb of SAE FU by event:"), plotlyOutput(ns("sae_fu_histogram_3")))
+                                                      ),
+                                                      fluidRow(
+                                                        column(6, h3("SAE follow-up (violin)"), plotlyOutput(ns("sae_fu_violin_2"))),
+                                                        column(6, h3("SAE follow-up (boxplot)"), plotlyOutput(ns("sae_fu_boxplot_2")))
+                                                      ), 
+                                                      fluidRow(
+                                                        column(12, h3("Table of the number SAE follow-up"), tableOutput(ns("sae_fu_table")))
+                                                      )
+                                             )
+                                      )
+                                    )
+                                  )
+                      )
           )
-  )
 }
 
 #' @rdname mod_sae
@@ -98,9 +104,23 @@ mod_sae_ui <- function(id, label){
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
 #' @param data.sae data for use in calculations
-mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
-
+mod_sae_server <- function(input, output, session, data.sae, data.sae.static, auth){
   ns <- session$ns
+  
+  #### test login ####
+  access_granted = reactive({
+    return(auth$access_sae)
+  })
+  #switch tabsetpanel depending on user rights for the module
+  observe({
+    req(access_granted())
+    if(access_granted())
+      updateTabsetPanel(inputId = "switcher", selected = "authorized")
+    else{
+      updateTabsetPanel(inputId = "switcher", selected = "not_authorized")
+    }
+  })
+
   
   ## Parameters to edit (adapting module to different datasets)
   # varname mapping - to map to your dataset variable names
@@ -419,15 +439,13 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
                 selected = "None") 
   })
   
-  #new tab(s) 2023
-  
-  # TODO # replace later with data passed to module
+  #### new tab(s) 2023 ####
+    # TODO # replace later with data passed to module
   ae_path_st <- "s_export_CSV_DEVL8_20230320-145336/ae.csv"
   sae_path_st <- "s_export_CSV_DEVL8_20230320-145336/sae.csv"
   color_aesae <- 'royalblue'
   color_ae <- 'mediumseagreen'
   color_sae <- 'tomato'
-  
   
   #nb event by patient - require AE + SAE datasets from sT
   nb_event_by_patient <- reactive({
