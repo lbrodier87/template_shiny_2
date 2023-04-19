@@ -74,11 +74,11 @@ mod_sae_ui <- function(id, label){
                    tabPanel(width=12, "AE/SAE follow-up",
                             p("in devel... first preview with non reactive sT data"),
                             fluidRow(
-                              column(12, h3("Histogram of the number of FU for events (AE+SAE) by patient"), plotlyOutput(ns("sae_fu_histogram_1")))
+                              column(12, h3("Histogram of the number of FU (AE+SAE FU) by event"), plotlyOutput(ns("sae_fu_histogram_1")))
                             ),
                             fluidRow(
-                              column(6, h3("Histogram of the nb of FU for AE"), plotlyOutput(ns("sae_fu_histogram_2"))),
-                              column(6, h3("Histogram of the nb of FU for SAE:"), plotlyOutput(ns("sae_fu_histogram_3")))
+                              column(6, h3("Histogram of the nb of AE FU by event"), plotlyOutput(ns("sae_fu_histogram_2"))),
+                              column(6, h3("Histogram of the nb of SAE FU by event:"), plotlyOutput(ns("sae_fu_histogram_3")))
                             ),
                             fluidRow(
                               column(6, h3("SAE follow-up (violin)"), plotlyOutput(ns("sae_fu_violin_2"))),
@@ -567,7 +567,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_fu_histogram_1 <- renderPlotly({
     g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.event',]) + 
       geom_histogram(aes(x=count), fill=color_aesae, binwidth = 0.5) +
-      theme_bw() + labs(x="nb of follow-ups", y="nb of events (AE/SAE)") + 
+      theme_bw() + labs(x="nb of AE+SAE follow-ups", y="nb of events") + 
       scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
       scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
     ggplotly(g, tooltip = NULL)
@@ -575,7 +575,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_fu_histogram_2 <- renderPlotly({
     g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.ae',]) + 
       geom_histogram(aes(x=count), fill=color_ae, binwidth = 0.5) +
-      theme_bw() + labs(x="nb of follow-ups", y="nb of AE") + 
+      theme_bw() + labs(x="nb of AE follow-ups", y="nb of events") + 
       scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
       scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
     ggplotly(g, tooltip = NULL)
@@ -583,7 +583,7 @@ mod_sae_server <- function(input, output, session, data.sae, data.sae.static){
   output$sae_fu_histogram_3 <- renderPlotly({
     g <- ggplot(data=nb_fu_by_aeid_melt()[nb_fu_by_aeid_melt()$aesae == 'nb.sae',]) + 
       geom_histogram(aes(x=count), fill=color_sae, binwidth = 0.5) +
-      theme_bw() + labs(x="nb of follow-ups", y="nb of SAE") + 
+      theme_bw() + labs(x="nb of SAE follow-ups", y="nb of events") + 
       scale_y_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0) +
       scale_x_continuous(breaks = seq(0, sum(nb_fu_by_aeid_melt()$count), by = 1), minor_breaks = 0)
     ggplotly(g, tooltip = NULL)
