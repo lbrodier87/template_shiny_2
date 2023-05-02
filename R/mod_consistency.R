@@ -1,6 +1,36 @@
 #' Consistency
 #'
-#' In development
+#' This module is intended to aid in uncovering inconsistencies in the data and
+#' is designed to work generically with all variables of the inputted data set. 
+#' For each variable, it shows different information, depending on its variable
+#' type. Specifically, there is one panel for each variable type. 
+#' For numeric variables, one can choose a minimum and maximum value and a table 
+#' gives an overview over the actual minimum and maximum value in the data and 
+#' the number of entries falling below the allowed minimum and above the allowed
+#' maximum. Furthermore, the distribution of the variable is visualized and 
+#' a list of entries outside the allowed data range is shown in a table.
+#' For character variables, the entries can be filtered for a specific text 
+#' (particularly useful for freetext fields). Moreover, a frequency plot or
+#' table can be selected for display, and both a list of the (filtered) entries 
+#' as well as a list of unique values are shown in tables.
+#' For date variables, comparisons with fixed ranges as well as comparisons 
+#' between different date variables can be performed. For fixed ranges, one can 
+#' choose a date range in which the variable needs to fall. The actual minimum 
+#' and maximum date is shown, as well as the number of entries below the minimum 
+#' and above the maximum. In addition, all entries outside the allowed date range
+#' are listed in a table. For date comparisons, two dates that shall be compared
+#' are selected and the number of entries where the dates are equal, where the 
+#' first date is below the second, and where the second date is below the first
+#' is shown in a table. NA values are ignored for these comparisons. Moreover, 
+#' the total number of entries for which both dates are present is shown, as well
+#' as a list of entries with equal and unequal dates. 
+#' Finally, multiple variables can be compared regardless of their type in a
+#' separate panel. The variables that shall be compared are selected and 
+#' contingency tables are created for these variables, as well as a filterable 
+#' list of all entries for the selected variables.
+#' For all tables listing raw entries, the patient id and the center is included 
+#' in addition to the selected variables.
+#' 
 #' @rdname mod_consistency
 #' @param id standard shiny id argument
 #' @param label standard shiny label argument
@@ -17,6 +47,7 @@ mod_consistency_ui <- function(id, label){
   ns <- NS(id)
   
   tabItem(tabName = label,
+          fluidRow(uiOutput(ns("form_out"))),
           fluidRow(
             tabBox(width = 12,
                    title = "",
@@ -131,11 +162,31 @@ mod_consistency_ui <- function(id, label){
 #' @param input standard shiny input argument
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
-#' @param data data for use in calculations
-mod_consistency_server <- function(input, output, session, data){
+#' @param data data for use in calculations, plots and figures
+mod_consistency_server <- function(input, output, session, all_data){
   
   ns <- session$ns
   
+  # Select form from which variables shall be taken ----
+  # TODO: it would be better if variables of all forms could be included together.
+  # But how to join them without creating duplicated entries because of repetition
+  # groups / NA entries for empty forms?
+  output$form_out <- renderUI({
+    
+    selectInput(inputId = ns("form_in"),
+                label = "Select form of interest:",
+                choices = names(all_data),
+                selected = names(all_data)[1])
+    
+  })
+
+  # Create reactive data according to input in form_in
+  data <- reactive({
+
+    all_data[[input$form_in]]()
+
+    })
+    
   ## Numeric variables ----
   
   # Reactive select inputs
@@ -152,11 +203,15 @@ mod_consistency_server <- function(input, output, session, data){
   # Select desired minimum and maximum
   output$minSlider_out <- renderUI({
     
+    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+      validate("All entries for the selected variable are NA")
+    }
+    
     sliderInput(ns("minSlider_in"),
                 "Choose allowed minimum",
-                min = round(min(data()[, input$numvar_in]), as.numeric(input$round_num)),
-                max = round(max(data()[, input$numvar_in]), as.numeric(input$round_num)),
-                value = round(min(data()[, input$numvar_in]), as.numeric(input$round_num)),
+                min = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                max = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                value = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
                 round = -as.numeric(input$round_num),
                 step = ifelse(as.numeric(input$round_num) == 0, 1,
                               as.numeric(paste0("0.",
@@ -169,11 +224,15 @@ mod_consistency_server <- function(input, output, session, data){
   
   output$maxSlider_out <- renderUI({
     
+    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+      validate("All entries for the selected variable are NA")
+    }
+    
     sliderInput(ns("maxSlider_in"),
                 "Choose allowed maximum",
-                min = round(min(data()[, input$numvar_in]), as.numeric(input$round_num)),
-                max = round(max(data()[, input$numvar_in]), as.numeric(input$round_num)),
-                value = round(max(data()[, input$numvar_in]), as.numeric(input$round_num)),
+                min = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                max = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                value = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
                 round = -as.numeric(input$round_num),
                 step = ifelse(as.numeric(input$round_num) == 0, 1,
                               as.numeric(paste0("0.",
@@ -186,6 +245,10 @@ mod_consistency_server <- function(input, output, session, data){
   # Create table with actual minimum and maximum values of the selected numeric variable
   output$minmax <- renderTable({
     
+    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+      validate("All entries for the selected variable are NA")
+    }
+    
     data() %>%
       summarize(`Actual minimum` = min(.data[[input$numvar_in]], na.rm = TRUE),
                 `Actual maximum` = max(.data[[input$numvar_in]], na.rm = TRUE),
@@ -196,6 +259,10 @@ mod_consistency_server <- function(input, output, session, data){
   
   # Create raincloud plot for selected numeric variables
   output$freqPlot <- renderPlot({
+    
+    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+      validate("All entries for the selected variable are NA")
+    }
     
     #ggplotly(
     ggplot(data = data(), aes(x = centre.short, y = .data[[input$numvar_in]])) +
@@ -224,8 +291,8 @@ mod_consistency_server <- function(input, output, session, data){
 
     selectInput(inputId = ns("idvar1_in"),
                 label = "Select additional variable(s) to be displayed:",
-                choices = colnames(data()),
                 selected = c("pat_id", "centre.short"),
+                choices = colnames(data()),
                 multiple = TRUE)
 
   })
@@ -332,6 +399,10 @@ mod_consistency_server <- function(input, output, session, data){
     if(nrow(react_char_dat()) == 0){
       validate("The string pattern was not found in the data for the selected variable")
     }
+    
+    if(all(is.na(react_char_dat() %>% pull(input$charvar_in)))){
+      validate("All entries for the selected variable are NA")
+    }
 
     # convert character vectors to factors for plotting
     sumvar_name <- paste0(input$charvar_in, "_sum")
@@ -423,7 +494,8 @@ mod_consistency_server <- function(input, output, session, data){
     
     dateRangeInput(ns("dateRange_in"),
                    "Choose date range where the date must fall into",
-                   start = min(data()$rando_date.date)
+                   start = min(data() %>% pull(input$datevar_in), na.rm = TRUE),
+                   end = max(data() %>% pull(input$datevar_in), na.rm = TRUE)
     )
     
   })
@@ -433,6 +505,10 @@ mod_consistency_server <- function(input, output, session, data){
     
     if(as.Date(input$dateRange_in[1]) > as.Date(input$dateRange_in[2])){
       validate("Selected minimum date is larger than selected maximum date")
+    }
+    
+    if(all(is.na(data() %>% pull(input$numvar_in)))){
+      validate("All entries for the selected variable are NA")
     }
     
     data() %>%
