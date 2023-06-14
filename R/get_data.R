@@ -2,6 +2,12 @@
 #'
 #' @param df 
 #'
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @import DT
+#' @import ggdist
+#' @import lubridate
 #' @return
 #' @export
 #'
@@ -166,22 +172,11 @@ get_data <- function(){
   study_params <- data.frame(acc_target = 150,
                              study_start = as.Date('2017/12/01'))
   
-  
   centers <- data.frame(centre.short = c(LETTERS[1:5], "Overall"),
                         monthly = c(2,1,2,1,5,11),
                         target = c(25, 35, 30, 30, 30, 150),
                         target_qol = c(20, 30, 25, 25, 25, 125),
                         target_fu1 = c(15, 25, 20, 20, 20, 100))
-  
-  ## read secuTrial test data to illustrate the completeness module
-  st_data = system.file("extdata/sT_exports/exp_opt/s_export_CSV-xls_CTU05_all_info.zip",
-                        package = "secuTrialR") %>%
-    read_secuTrial() %>%
-    magrittr::extract(c(
-      "esurgeries", "baseline", "outcome", "treatment", "allmedi", "studyterminat", "ae", "sae"
-    )) %>%
-    map(tibble) %>%
-    map(~ .x %>% select(-contains(".factor")))
   
   
   sae_descr <- c("headache", "Headache", "Cancer", "Allergic reaction") # ?
@@ -238,19 +233,100 @@ get_data <- function(){
            )
     )
   
+  # completeness df
+  
+  completeness <- list()
+  # table sae
+  set.seed(1)
+  completeness$demographics <- consistency %>% 
+    # missing completely at random (continuous variable)
+    missMethods::delete_MCAR(p = .1, cols_mis = colnames(consistency)[c(16, 18, 23:25)]) %>% 
+    mutate(height = ifelse(is.na(weight), NA,height)) %>% 
+    mutate_if(is.logical, as.factor) %>% 
+    mutate_if(is.character, as.factor) %>% 
+    missMethods::delete_MNAR_censoring(p = .15, cols_mis = colnames(consistency)[c(7:12, 14, 15, 17, 19)])
+  
+  # table demographics
+  set.seed(2)
+  completeness$sae <- sae %>% as_tibble() %>% 
+    left_join(
+      completeness$demographics %>% select(pat_id, centre.short, rando_date.date)
+    ) %>% relocate(pat_id, centre.short, rando_date.date) %>% 
+    mutate(centre.short = as.factor(centre.short)) %>% 
+    # missing at random ~ centre.short (factor)
+    missMethods::delete_MAR_one_group(p = .1, cols_mis = "severity_level", cols_ctrl = "centre.short") %>% 
+    mutate(expectedness = ifelse(is.na(severity_level), NA, expectedness),
+           causality = ifelse(is.na(severity_level), NA, causality)) %>% 
+    missMethods::delete_MCAR(p=.12, cols_mis = c("outcome","death", "life_threatening", 
+                                                 "persistant_disability", "hospitalization", 
+                                                 "congenital_anomalia_birth_defect")) %>% 
+    mutate_if(is.character, as.factor)
+  
+  
+  # table laboratory values
+  set.seed(3)
+  inflamm_and_temperature_values <- simstudy::genCorData(
+    nrow(completeness$demographics),
+    mu = c(10, 37, 7575),
+    sigma = c(4, .5, 1250),
+    corMatrix = matrix(c(1, 0.7, 0.6, 0.7, 1, 0.8, 0.6, 0.8, 1), nrow = 3)
+  ) %>% as_tibble
+  names(inflamm_and_temperature_values) = c("index", "CRP", "body_temperatur", "white_blood_cell_count")
+  set.seed(4)
+  completeness$laboratory <- completeness$demographics %>% select(pat_id, centre.short, rando_date.date) %>% 
+    mutate(
+      ALT = rnorm(nrow(completeness$demographics), mean = 18.5, sd=6),
+      Albumin = rnorm(nrow(completeness$demographics), mean = 3.75, sd = .5),
+      Alkaline_phosphatase = rnorm(nrow(completeness$demographics), mean = 80, sd = 18),
+      Amylase_serum = rnorm(nrow(completeness$demographics), mean = 88, sd = 18),
+      AST = rnorm(nrow(completeness$demographics), mean = 25, sd = 7.5),
+      bilirubin_direct = rnorm(nrow(completeness$demographics), mean = 0.2, sd = .05),
+      CRP = inflamm_and_temperature_values$CRP, white_blood_cell = inflamm_and_temperature_values$white_blood_cell_count
+    ) %>%
+    # missing not at random (continuous variable)
+    missMethods::delete_MNAR_censoring(p = .1, cols_mis = "CRP") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("ALT"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Albumin"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Alkaline_phosphatase"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("Amylase_serum"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("AST"), cols_ctrl = "centre.short") %>% 
+    missMethods::delete_MAR_one_group(p=.15,cols_mis = c("bilirubin_direct"), cols_ctrl = "centre.short")
+  
+  # table vitals
+  set.seed(5)
+  blood_pressure <- simstudy::genCorData(
+    nrow(completeness$demographics),
+    mu = c(80, 120),
+    sigma = c(10, 10),
+    corMatrix = matrix(c(1, .85, .85, 1), nrow = 2)
+  )
+  names(blood_pressure) = c("index", "diastolic_bp", "systolic_bp")
+  
+  completeness$vitals <- completeness$demographics %>% select(pat_id, centre.short, rando_date.date) %>% 
+    mutate(
+      systolic_bp = blood_pressure$diastolic_bp,
+      diastolic_bp = blood_pressure$systolic_bp,
+      temperatur = inflamm_and_temperature_values$body_temperatur
+    ) %>% 
+    missMethods::delete_MCAR(p = .13, cols_mis = c("systolic_bp", "temperatur")) %>% 
+    mutate(
+      diastolic_bp = ifelse(is.na(systolic_bp), NA, diastolic_bp)
+    )
+  
+  
   
   #######################################################################################################################
   ###                                                     SAVE DATA                                                   ###
   #######################################################################################################################
-  
+    
   data <- list(
     data.extraction.date = data.extraction.date,
     randomized = randomized,
     all = df.all,
     queries = df.queries,
     locations = locations,
+    completeness = completeness,
     centers = centers,
-    st_data = st_data,
     study_params = study_params,
     consistency = consistency, 
     sae = sae
