@@ -113,24 +113,24 @@ mod_completeness_ui <- function(id, label){
                                  )
                                )
                                # Sub-TAB: missingness ~ date ----
-                               , tabPanel(
-                                 "with date"
-                                 , column(
-                                   width = 3
-                                   , br()
-                                   ,uiOutput(ns("date_for_display_out")) 
-                                   , uiOutput(ns("variable_missingness_against_date_out")) 
-                                   , p("Note: by default only variable with missing values are selected")
-                                 ),
-                                 column(
-                                   width = 9
-                                   , br()
-                                   , plotlyOutput(ns("plot_missingness_against_date"), height = "650")
-                                 )
-                               )
+                               # , tabPanel(
+                               #   "with date"
+                               #   , column(
+                               #     width = 3
+                               #     , br()
+                               #     ,uiOutput(ns("date_for_display_out")) 
+                               #     , uiOutput(ns("variable_missingness_against_date_out")) 
+                               #     , p("Note: by default only variable with missing values are selected")
+                               #   ),
+                               #   column(
+                               #     width = 9
+                               #     , br()
+                               #     , plotlyOutput(ns("plot_missingness_against_date"), height = "650")
+                               #   )
+                               # )
                                # Sub-TAB: ditrib quant var ~ missingness other variable ----
                                , tabPanel(
-                                 "distribution ~ missingness"
+                                 "distribution against missingness"
                                  , column(
                                    width = 3
                                    , uiOutput(ns("var_distrib_against_missingness_out"))
@@ -231,8 +231,8 @@ mod_completeness_server <- function(input, output, session, data){
           title = element_text(size = 16)
           , axis.text.x = element_text(size = 12)
           , axis.title.x = element_text(size = 14)
-          , axis.text.y = element_text(size = 12)
-          , axis.title.y = element_text(size = 14)
+          , axis.text.y = element_text(size = 10)
+          , axis.title.y = element_text(size = 10)
           , legend.text = element_text(size = 12)
         )
     }
@@ -406,15 +406,20 @@ mod_completeness_server <- function(input, output, session, data){
   
   output$plot_distrib_against_missingness <- renderPlot({
 
-      d = form_selected() %>% select(c(input$var_missingness_for_distrib_miss, input$var_distrib_against_missingness_in)) %>% 
+      d = form_selected() %>% 
+        select(c(input$var_missingness_for_distrib_miss, input$var_distrib_against_missingness_in)) %>% 
       bind_shadow()
+      
+      d[[paste0(input$var_missingness_for_distrib_miss, "_NA")]] =
+        ifelse(d[[paste0(input$var_missingness_for_distrib_miss, "_NA")]] == "NA", "missing", "not missing")
       
       if (input$var_missingness_for_distrib_miss == input$var_distrib_against_missingness_in){
         br()
         validate("Please, chose a different variable for missingness than for the distribution.")
       } else{
         ggplot(data = d, aes(fill = .data[[ paste0(input$var_missingness_for_distrib_miss, "_NA")]], x = .data[[input$var_distrib_against_missingness_in]])) + 
-          geom_density(alpha = .3) + theme_minimal() + set_font_size
+          geom_density(alpha = .3) + theme_minimal() + set_font_size +
+          labs(fill = input$var_missingness_for_distrib_miss)
       }
     
   })
