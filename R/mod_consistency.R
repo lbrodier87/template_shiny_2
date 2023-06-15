@@ -4,15 +4,18 @@
 #' is designed to work generically with all variables of the inputted data set. 
 #' For each variable, it shows different information, depending on its variable
 #' type. Specifically, there is one panel for each variable type. 
+#' 
 #' For numeric variables, one can choose a minimum and maximum value and a table 
 #' gives an overview over the actual minimum and maximum value in the data and 
 #' the number of entries falling below the allowed minimum and above the allowed
 #' maximum. Furthermore, the distribution of the variable is visualized and 
 #' a list of entries outside the allowed data range is shown in a table.
+#' 
 #' For character variables, the entries can be filtered for a specific text 
 #' (particularly useful for freetext fields). Moreover, a frequency plot or
 #' table can be selected for display, and both a list of the (filtered) entries 
 #' as well as a list of unique values are shown in tables.
+#' 
 #' For date variables, comparisons with fixed ranges as well as comparisons 
 #' between different date variables can be performed. For fixed ranges, one can 
 #' choose a date range in which the variable needs to fall. The actual minimum 
@@ -24,12 +27,14 @@
 #' is shown in a table. NA values are ignored for these comparisons. Moreover, 
 #' the total number of entries for which both dates are present is shown, as well
 #' as a list of entries with equal and unequal dates. 
+#' 
 #' Finally, multiple variables can be compared regardless of their type in a
 #' separate panel. The variables that shall be compared are selected and 
 #' contingency tables are created for these variables, as well as a filterable 
 #' list of all entries for the selected variables.
-#' For all tables listing raw entries, the patient id and the center is included 
-#' in addition to the selected variables.
+#' 
+#' For all tables listing raw entries, the patient id and the center are included 
+#' (if present in the data) in addition to the selected variables.
 #' 
 #' @rdname mod_consistency
 #' @param id standard shiny id argument
@@ -44,17 +49,28 @@
 #' @import lubridate
 mod_consistency_ui <- function(id, label){
   
+  # Initialize namespaced IDs for inputs and outputs
   ns <- NS(id)
   
+  # Build up the UI
+  # Note: For documentation of uiOutputs, see mod_consistency_server
   tabItem(tabName = label,
-          fluidRow(uiOutput(ns("form_out"))),
+          
+          # For selection of the form for which the consistency shall be checked
+          fluidRow(
+            box(uiOutput(ns("form_out")))),
+          
+          # Check consistency
           fluidRow(
             tabBox(width = 12,
                    title = "",
                    id = "tabset2",
                    height = "450px",
+                   
+                   # for numeric variables
                    tabPanel("Numeric variables",
                             uiOutput(ns("numvar_out")),
+                            # Select input to choose the number of digits to round to
                             selectInput(inputId = ns("round_num"),
                                         label = "Number of digits to round to:",
                                         choices = 0:5,
@@ -68,23 +84,36 @@ mod_consistency_ui <- function(id, label){
                                                  br(),
                                                  h4("Shows entries that fall below minimum or exceed maximum"),
                                                  br(),
-                                                 uiOutput(ns("idvar1_out")),
+                                                 uiOutput(ns("idvar_num_out")),
                                                  DTOutput(outputId = ns("numEntryList"))
                                         )
                             )
                    ),
+                   
+                   # for character variables
                    tabPanel("Character variables",
                             uiOutput(ns("charvar_out")),
+                            # Text input for the text used to filter the entries
+                            # in the selected character variable
                             textInput(inputId = ns("filtText"),
                                       label = "Filter entries for this text"),
+                            # Checkbox input to choose whether the case should
+                            # be matched between the string entered in filtText 
+                            # and the variable entries
                             checkboxInput(inputId = ns("matchCase"),
                                           label = "Match case?",
                                           value = FALSE),
+                            # Checkbox input to choose whether non-alphanumeric
+                            # characters (i.e., [^a-zA-Z0-9\x7f-\xff]) shall be 
+                            # ignored when comparing the string entererd in 
+                            # filtText and the variable entries
                             checkboxInput(inputId = ns("alphanum"),
                                           label = "Ignore all non-alphanumeric characters?",
                                           value = FALSE),
                             tabsetPanel(tabPanel("Frequencies",
                                                  uiOutput(ns("char_freq_out")),
+                                                 # Conditional Panel. Depending on the input in char_freq_in,
+                                                 # display a plot or a table
                                                  conditionalPanel(condition = "input.char_freq_in == 'plot'",
                                                                   ns = ns,
                                                                   plotOutput(outputId = ns("barPlot"))),
@@ -96,7 +125,7 @@ mod_consistency_ui <- function(id, label){
                                                  br(),
                                                  h4("Shows either all entries or, if a text is inputted in the filter box, the entries including this text."),
                                                  br(),
-                                                 uiOutput(ns("idvar2_out")),
+                                                 uiOutput(ns("idvar_char_out")),
                                                  tableOutput(outputId = ns("hitsEntries")),
                                                  br(),
                                                  DTOutput(outputId = ns("charEntryList"))
@@ -110,6 +139,8 @@ mod_consistency_ui <- function(id, label){
                                                  )
                                         )
                    ),
+                   
+                   # for date variables
                    tabPanel("Date variables",
                             tabsetPanel(tabPanel("Fixed range",
                                                  br(),
@@ -120,7 +151,7 @@ mod_consistency_ui <- function(id, label){
                                                  br(),
                                                  h4("Shows entries that fall below minimum or exceed maximum"),
                                                  br(),
-                                                 uiOutput(ns("idvar3_out")),
+                                                 uiOutput(ns("idvar_date1_out")),
                                                  DTOutput(outputId = ns("dateEntryList"))
                             ),
                             tabPanel("Date comparisons",
@@ -130,7 +161,7 @@ mod_consistency_ui <- function(id, label){
                                      br(),
                                      tableOutput(outputId = ns("datecomp_tab")),
                                      br(),
-                                     uiOutput(ns("idvar4_out")),
+                                     uiOutput(ns("idvar_date2_out")),
                                      tabsetPanel(tabPanel("Both dates equal",
                                                           DTOutput(outputId = ns("dateEqualList")),
                                      ),
@@ -144,11 +175,13 @@ mod_consistency_ui <- function(id, label){
                             )
                             )
                    ),
+                   
+                   # Comparison of multiple variables
                    tabPanel("Multiple variables",
                             uiOutput(ns("crossvar_out")),
                             tableOutput(outputId = ns("crosstab")),
                             br(),
-                            uiOutput(ns("idvar5_out")),
+                            uiOutput(ns("idvar_mult_out")),
                             DTOutput(outputId = ns("cross_dt"))
                             )
             )
@@ -162,9 +195,11 @@ mod_consistency_ui <- function(id, label){
 #' @param input standard shiny input argument
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
-#' @param data data for use in calculations, plots and figures
+#' @param all_data data for use in calculations, plots and figures. Needs to be 
+#' a list of reactive data frames.
 mod_consistency_server <- function(input, output, session, all_data){
   
+  # Get Namespaces IDs
   ns <- session$ns
   
   # Select form from which variables shall be taken ----
@@ -180,16 +215,21 @@ mod_consistency_server <- function(input, output, session, all_data){
     
   })
 
-  # Create reactive data according to input in form_in
+  # Create reactive data for selected form
+  # All variables shall be taken from this data frame
   data <- reactive({
 
     all_data[[input$form_in]]()
 
     })
-    
-  ## Numeric variables ----
   
-  # Reactive select inputs
+  ## ----------------------
+  ## Numeric variables ----
+  ## ----------------------
+  
+  # Select and slider inputs -------
+  
+  # Select input for variable of interest within the selected form
   output$numvar_out <- renderUI({
 
     selectInput(inputId = ns("numvar_in"),
@@ -199,71 +239,100 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
   
-  # Reactive slider inputs: set min and max according to min and max of actual data
-  # Select desired minimum and maximum
+  # Slider inputs: set min and max according to min and max of actual data
+  
+  # Slider input to select desired minimum
   output$minSlider_out <- renderUI({
     
-    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+    # Break and show this message if all entries in the selected numeric variable 
+    # are NA
+    if(all(is.na(data() %>% pull(input$numvar_in)))){
       validate("All entries for the selected variable are NA")
     }
     
     sliderInput(ns("minSlider_in"),
                 "Choose allowed minimum",
-                min = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
-                max = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
-                value = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                min = round(min(data()[, input$numvar_in], na.rm = TRUE),
+                            as.numeric(input$round_num)),
+                max = round(max(data()[, input$numvar_in], na.rm = TRUE), 
+                            as.numeric(input$round_num)),
+                value = round(min(data()[, input$numvar_in], na.rm = TRUE), 
+                              as.numeric(input$round_num)),
                 round = -as.numeric(input$round_num),
                 step = ifelse(as.numeric(input$round_num) == 0, 1,
                               as.numeric(paste0("0.",
-                                                paste0(rep("0", (as.numeric(input$round_num) - 1)),
+                                                paste0(rep("0", 
+                                                           (as.numeric(input$round_num) - 1)),
                                                        collapse = ""),
                                                 "1")))
     )
     
   })
   
+  # Slider input to select desired maximum
   output$maxSlider_out <- renderUI({
     
-    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+    # Break and show this message if all entries in the selected numeric variable 
+    # are NA
+    if(all(is.na(data() %>% pull(input$numvar_in)))){
       validate("All entries for the selected variable are NA")
     }
     
     sliderInput(ns("maxSlider_in"),
                 "Choose allowed maximum",
-                min = round(min(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
-                max = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
-                value = round(max(data()[, input$numvar_in], na.rm = TRUE), as.numeric(input$round_num)),
+                min = round(min(data()[, input$numvar_in], na.rm = TRUE),
+                            as.numeric(input$round_num)),
+                max = round(max(data()[, input$numvar_in], na.rm = TRUE), 
+                            as.numeric(input$round_num)),
+                value = round(max(data()[, input$numvar_in], na.rm = TRUE), 
+                              as.numeric(input$round_num)),
                 round = -as.numeric(input$round_num),
                 step = ifelse(as.numeric(input$round_num) == 0, 1,
                               as.numeric(paste0("0.",
-                                                paste0(rep("0", (as.numeric(input$round_num) - 1)),
+                                                paste0(rep("0", 
+                                                           (as.numeric(input$round_num) - 1)),
                                                        collapse = ""),
                                                 "1"))))
     
   })
   
-  # Create table with actual minimum and maximum values of the selected numeric variable
+  # Table minimum and maximum -----
+  
+  # Create table with actual minimum and maximum values of the selected numeric 
+  # variable, as well as the number of entries falling below the allowed minimum
+  # or above the allowed maximum
   output$minmax <- renderTable({
     
-    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+    # Break and show this message if all entries in the selected numeric variable 
+    # are NA
+    if(all(is.na(data() %>% pull(input$numvar_in)))){
       validate("All entries for the selected variable are NA")
     }
     
     data() %>%
       summarize(`Actual minimum` = min(.data[[input$numvar_in]], na.rm = TRUE),
                 `Actual maximum` = max(.data[[input$numvar_in]], na.rm = TRUE),
-                `Number of entries below allowed minimum` = sum(.data[[input$numvar_in]] < as.numeric(input$minSlider_in), na.rm = TRUE),
-                `Number of entries above allowed maximum` = sum(.data[[input$numvar_in]] > as.numeric(input$maxSlider_in), na.rm = TRUE))
+                `Number of entries below allowed minimum` = 
+                  sum(.data[[input$numvar_in]] < as.numeric(input$minSlider_in,
+                                                            na.rm = TRUE)),
+                `Number of entries above allowed maximum` = 
+                  sum(.data[[input$numvar_in]] > as.numeric(input$maxSlider_in), 
+                      na.rm = TRUE))
     
   })
   
-  # Create raincloud plot for selected numeric variables
+  # Plot distribution -----
+  
+  # Create plot to visualize the distribution of the selected numeric variable
   output$freqPlot <- renderPlot({
     
-    if(all(is.na(react_char_dat() %>% pull(input$numvar_in)))){
+    # Break and show this message if all entries in the selected numeric variable 
+    # are NA
+    if(all(is.na(data() %>% pull(input$numvar_in)))){
       validate("All entries for the selected variable are NA")
     }
     
+    # TODO: Make this work with ggplotly!
     #ggplotly(
     ggplot(data = data(), aes(x = centre.short, y = .data[[input$numvar_in]])) +
       geom_violin(fill = "#00BA38") +
@@ -272,9 +341,11 @@ mod_consistency_server <- function(input, output, session, all_data){
       geom_jitter(position = position_jitter(0.2),
                   shape = 16) +
       xlab("Centre") +
-      annotate("rect", xmin = -Inf, xmax = Inf, ymin = as.numeric(input$maxSlider_in), ymax = Inf,
+      annotate("rect", xmin = -Inf, xmax = Inf, 
+               ymin = as.numeric(input$maxSlider_in), ymax = Inf,
                alpha = 0.8, fill = "darkgrey") +
-      annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = as.numeric(input$minSlider_in),
+      annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, 
+               ymax = as.numeric(input$minSlider_in),
                alpha = 0.8, fill = "darkgrey") +
       theme_bw()
     #) %>%
@@ -287,9 +358,16 @@ mod_consistency_server <- function(input, output, session, all_data){
     
   })
   
-  output$idvar1_out <- renderUI({
+  # Datatable to show all entries -------
+  
+  # Datatable to show all entries falling below minimum or above maximum for the 
+  # selected numeric variable
+  
+  # Select input to select additional variables to be displayed in the datatable,
+  # apart from the selected numeric variable
+  output$idvar_num_out <- renderUI({
 
-    selectInput(inputId = ns("idvar1_in"),
+    selectInput(inputId = ns("idvar_num_in"),
                 label = "Select additional variable(s) to be displayed:",
                 selected = c("pat_id", "centre.short"),
                 choices = colnames(data()),
@@ -297,22 +375,28 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
   
-  # List all entries of selected numeric variable
+  # List all entries falling below minimum or above maximum for the selected
+  # numeric variable
   output$numEntryList <- renderDT({
 
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar1_in, input$numvar_in))) %>%
+                    select(!!!syms(c(input$idvar_num_in, input$numvar_in))) %>%
                     filter(.data[[input$numvar_in]] < as.numeric(input$minSlider_in) |
                              .data[[input$numvar_in]] > as.numeric(input$maxSlider_in)) %>%
-                    mutate(across(where(is.numeric), ~ round(.x, digits = as.numeric(input$round_num)))) %>%
+                    mutate(across(where(is.numeric), ~ 
+                                    round(.x, digits = as.numeric(input$round_num)))) %>%
                     arrange(.data[[input$numvar_in]]),
                   rownames = FALSE)
 
   })
   
+  ## -------------------------
   ## Character variables -----
+  ## -------------------------
   
-  # Reactive select inputs
+  # Select inputs ------
+  
+  # Select input to select character variable of interest
   output$charvar_out <- renderUI({
 
     selectInput(inputId = ns("charvar_in"),
@@ -322,18 +406,25 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
 
+  # Select input to choose between plot and table for display of the distribution
   output$char_freq_out <- renderUI({
 
     selectInput(inputId = ns("char_freq_in"),
                 label = "Choose plot or table:",
                 choices = c(Plot = "plot", Table = "table"),
-                selected = ifelse(length(levels(react_char_dat() %>% pull(input$charvar_in))) <= 15,
+                selected = ifelse(length(levels(react_char_dat() %>% 
+                                                  pull(input$charvar_in))) <= 15,
                                   "plot", "table"))
 
   })
   
-  # Render reactive data element according to filter variables
+  # Reactive data element -----
+  
+  # Render reactive data element that filters entries for the selected character
+  # variable according to the string provided in filtText
   react_char_dat <- reactive({
+    
+    # HIER STEHENGEBLIEBEN
 
     # Convert all character variables to factors for later use in plots
     react_dat <- data() %>%
@@ -343,6 +434,7 @@ mod_consistency_server <- function(input, output, session, all_data){
     if(!is.na(input$filtText) & !is.null(input$filtText) & input$filtText != ""){
 
       # Match case and ignore all non-alphanumeric characters, if both required
+      # based on checkbox input (matchCase and alphanum)
       # Note: the \x7f-\xff is needed to match German Umlaute and other special letters
       if(isTRUE(input$matchCase) & isTRUE(input$alphanum)){
 
@@ -352,13 +444,13 @@ mod_consistency_server <- function(input, output, session, all_data){
                             str_remove_all(input$filtText,
                                            "[^a-zA-Z0-9\x7f-\xff]")))
 
-        # Only match case
+        # Match case and include non-alphanumeric characters
       } else if(isTRUE(input$matchCase) & isFALSE(input$alphanum)) {
 
         react_dat <- react_dat %>%
           filter(str_detect(.data[[input$charvar_in]], input$filtText))
 
-        # Ignore non-alphanumeric characters, but do not match case
+        # Ignore non-alphanumeric characters and do not match case
       } else if(isFALSE(input$matchCase) & isTRUE(input$alphanum)) {
 
         react_dat <- react_dat %>%
@@ -367,7 +459,8 @@ mod_consistency_server <- function(input, output, session, all_data){
                             tolower(str_remove_all(input$filtText,
                                                    "[^a-zA-Z0-9\x7f-\xff]"))))
 
-        # Do not match case or ignore non-alphanumeric characters if none of the check boxes is checked
+        # Do not match case or ignore non-alphanumeric characters if none of the 
+        # check boxes is checked
       } else {
 
         react_dat <- react_dat %>%
@@ -377,15 +470,15 @@ mod_consistency_server <- function(input, output, session, all_data){
 
     }
 
-    # If no text is provided, return the all entries (= unchanged react_dat)
+    # If no text is provided in filtText, return all entries unchanged
 
     return(react_dat)
 
   })
   
-  output$idvar2_out <- renderUI({
+  output$idvar_char_out <- renderUI({
 
-    selectInput(inputId = ns("idvar2_in"),
+    selectInput(inputId = ns("idvar_char_in"),
                 label = "Select additional variable(s) to be displayed:",
                 choices = colnames(data()),
                 selected = c("pat_id", "centre.short"),
@@ -396,10 +489,14 @@ mod_consistency_server <- function(input, output, session, all_data){
   # Barplot with frequencies (with bars sideways to handle many categories)
   output$barPlot <- renderPlot({
 
+    # Break and show this message if the string pattern provided in filtText is
+    # not found in any of the entries for the selected character variable
     if(nrow(react_char_dat()) == 0){
       validate("The string pattern was not found in the data for the selected variable")
     }
     
+    # Break and show this message if all entries in the selected character 
+    # variable are NA
     if(all(is.na(react_char_dat() %>% pull(input$charvar_in)))){
       validate("All entries for the selected variable are NA")
     }
@@ -442,7 +539,7 @@ mod_consistency_server <- function(input, output, session, all_data){
   output$charEntryList <- renderDT({
 
     DT::datatable(react_char_dat() %>%
-                    select(!!!syms(c(input$idvar2_in, input$charvar_in))) %>%
+                    select(!!!syms(c(input$idvar_char_in, input$charvar_in))) %>%
                     arrange(.data[[input$charvar_in]]),
                   rownames = FALSE, options = list(searching = FALSE))
 
@@ -476,10 +573,11 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
 
-  
+  ## --------------------
   ## Date variables -----
+  ## --------------------
   
-  # Reactive select inputs
+  # Select inputs
   output$datevar_out <- renderUI({
 
     selectInput(inputId = ns("datevar_in"),
@@ -503,10 +601,14 @@ mod_consistency_server <- function(input, output, session, all_data){
   # Create table with actual minimum and maximum values of the selected date variable
   output$minmax_date <- renderTable({
     
+    # Break and show this message if the date range is illogical (i.e., the 
+    # selected minimum date is larger than the selected maximum date)
     if(as.Date(input$dateRange_in[1]) > as.Date(input$dateRange_in[2])){
       validate("Selected minimum date is larger than selected maximum date")
     }
     
+    # Break and show this message if all entries in the selected date variable 
+    # are NA
     if(all(is.na(data() %>% pull(input$numvar_in)))){
       validate("All entries for the selected variable are NA")
     }
@@ -519,9 +621,9 @@ mod_consistency_server <- function(input, output, session, all_data){
     
   })
   
-  output$idvar3_out <- renderUI({
+  output$idvar_date1_out <- renderUI({
 
-    selectInput(inputId = ns("idvar3_in"),
+    selectInput(inputId = ns("idvar_date1_in"),
                 label = "Select additional variable(s) to be displayed:",
                 choices = colnames(data()),
                 selected = c("pat_id", "centre.short"),
@@ -532,12 +634,14 @@ mod_consistency_server <- function(input, output, session, all_data){
   # List all entries of selected date variable
   output$dateEntryList <- renderDT({
     
+    # Break and show this message if the date range is illogical (i.e., the 
+    # selected minimum date is larger than the selected maximum date)
     if(as.Date(input$dateRange_in[1]) > as.Date(input$dateRange_in[2])){
       validate("Selected minimum date is larger than selected maximum date")
     }
 
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar3_in, input$datevar_in))) %>%
+                    select(!!!syms(c(input$idvar_date1_in, input$datevar_in))) %>%
                     filter(.data[[input$datevar_in]] < as.Date(input$dateRange_in[1]) |
                              .data[[input$datevar_in]] > as.Date(input$dateRange_in[2])) %>%
                     arrange(.data[[input$datevar_in]]) %>% 
@@ -584,9 +688,9 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
 
-  output$idvar4_out <- renderUI({
+  output$idvar_date2_out <- renderUI({
 
-    selectInput(inputId = ns("idvar4_in"),
+    selectInput(inputId = ns("idvar_date2_in"),
                 label = "Select additional variable(s) to be displayed in tables below",
                 choices = colnames(data()),
                 selected = c("pat_id", "centre.short"),
@@ -598,7 +702,7 @@ mod_consistency_server <- function(input, output, session, all_data){
   output$dateEqualList <- renderDT({
 
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
+                    select(!!!syms(c(input$idvar_date2_in, input$datevar1_in, input$datevar2_in))) %>%
                     filter(.data[[input$datevar1_in]] == .data[[input$datevar2_in]]) %>%
                     arrange(.data[[input$datevar1_in]]) %>% 
                     mutate(across(where(is.POSIXt), is.character)),
@@ -610,7 +714,7 @@ mod_consistency_server <- function(input, output, session, all_data){
   output$dateSmallerList <- renderDT({
 
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
+                    select(!!!syms(c(input$idvar_date2_in, input$datevar1_in, input$datevar2_in))) %>%
                     filter(.data[[input$datevar1_in]] < .data[[input$datevar2_in]]) %>%
                     arrange(.data[[input$datevar1_in]]) %>% 
                     mutate(across(where(is.POSIXt), as.character)),
@@ -622,7 +726,7 @@ mod_consistency_server <- function(input, output, session, all_data){
   output$dateLargerList <- renderDT({
 
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar4_in, input$datevar1_in, input$datevar2_in))) %>%
+                    select(!!!syms(c(input$idvar_date2_in, input$datevar1_in, input$datevar2_in))) %>%
                     filter(.data[[input$datevar1_in]] > .data[[input$datevar2_in]]) %>%
                     arrange(.data[[input$datevar1_in]]) %>% 
                     mutate(across(where(is.POSIXt), as.character)),
@@ -630,8 +734,10 @@ mod_consistency_server <- function(input, output, session, all_data){
 
   })
 
+  ## ----------------
   ## Crosstable -----
-  
+  ## ----------------
+
   output$crossvar_out <- renderUI({
 
     selectizeInput(inputId = ns("crossvar_in"),
@@ -646,6 +752,9 @@ mod_consistency_server <- function(input, output, session, all_data){
   # Create a crosstable
   output$crosstab <- renderTable({
     
+    # Break and show respective message if no variables are selected or too
+    # many variables are selected, resulting in too many entries for the 
+    # crosstable
     if(length(input$crossvar_in) == 0){
       validate("No variables selected")
     } else if(data() %>% summarize(across(all_of(input$crossvar_in), n_distinct)) %>% prod() > 10000) {
@@ -663,9 +772,9 @@ mod_consistency_server <- function(input, output, session, all_data){
     
   })
   
-  output$idvar5_out <- renderUI({
+  output$idvar_mult_out <- renderUI({
     
-    selectInput(inputId = ns("idvar5_in"),
+    selectInput(inputId = ns("idvar_mult_in"),
                 label = "Select additional variable(s) to be displayed in tables below",
                 choices = colnames(data()),
                 selected = c("pat_id", "centre.short"),
@@ -677,7 +786,7 @@ mod_consistency_server <- function(input, output, session, all_data){
   output$cross_dt <- renderDT({
     
     DT::datatable(data() %>%
-                    select(!!!syms(c(input$idvar5_in, input$crossvar_in))) %>% 
+                    select(!!!syms(c(input$idvar_mult_in, input$crossvar_in))) %>% 
                     arrange(!!!syms(input$crossvar_in)),
                   rownames = FALSE, filter = "top")
     
