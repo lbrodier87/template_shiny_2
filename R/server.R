@@ -3,9 +3,15 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import shinymanager
 #' @noRd
 
 app_server <- function(input, output, session ) {
+  #check_credentials returns a function to authenticate users
+  res_auth <- shinymanager::secure_server(
+    check_credentials = shinymanager::check_credentials("users.sqlite", "scto_rshiny_app")
+  )
+  
   ## Get all module names
   mod <- get_modules()
 
@@ -41,8 +47,8 @@ app_server <- function(input, output, session ) {
   callModule(mod_queries_server, mod$queries, rx.data$rx_queries)
   callModule(mod_visits_server, mod$visits, data)
   callModule(mod_participant_server, mod$participant, data)
-  callModule(mod_sae_server, mod$sae, rx.data$rx_sae, data$sae)
-  callModule(mod_ae_server, mod$ae, data)
+  callModule(mod_sae_server, mod$sae, rx.data$rx_sae, data$sae, auth=res_auth)
+  callModule(mod_ae_server, mod$ae, data, auth=res_auth)
   callModule(mod_asr_server, mod$asr, data)
 
 }
