@@ -27,6 +27,15 @@ get_reactive_data <- function(data, input){
       filter(data$all, rando_date.date >= input$period[1] & rando_date.date <= input$period[2])
     })
   
+  completeness_period <- reactive(
+    
+    if(input$center != "All"){
+      map(data$completeness, ~filter(.x, centre.short == input$center & rando_date.date >= input$period[1] & rando_date.date <= input$period[2]))
+      
+    } else{
+      map(data$completeness, ~filter(.x, rando_date.date >= input$period[1] & rando_date.date <= input$period[2]))
+    })
+  
   consistency_period <- reactive(
     
     if(input$center != "All"){
@@ -76,6 +85,7 @@ get_reactive_data <- function(data, input){
   reactive_data <- list(
     rx_random = random_period,
     rx_all = all_period,
+    rx_completeness = completeness_period,
     rx_consistency = consistency_period,
     rx_all = all_period,
     rx_sae = sae_period,
