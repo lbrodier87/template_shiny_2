@@ -35,7 +35,7 @@ mod_recruitment2_ui <- function(id, label){
                   ")),
 
           fluidRow(
-            tags$style(".small-box.bg-yellow { background-color: #a5d7d2 !important; color: #333333 !important; }"),
+            tags$style(".small-box.bg-yellow { background-color: #e4f1fa !important; color: #333333 !important; }"),
             tags$style(".small-box.bg-red { background-color: #d20537 !important; color: #333333 !important; }"),
             valueBoxOutput(ns("randomized"), width = 6),
             valueBoxOutput(ns("estimated"), width = 6)

@@ -21,19 +21,17 @@ app_ui <- function(request) {
       dashboardPage(skin = "blue",
 
                     ## Header
-                    dashboardHeader(title = paste0("Study as of ",
-                                                   data$data.extraction.date
-                                                   ), titleWidth = 300),
+                    dashboardHeader(title = paste0("SCTO dashboard template"), titleWidth = 350),
 
                     ## Sidebar
                     dashboardSidebar(
 
                       tags$head(tags$style(HTML('.logo {
-                              background-color: #1ea5a5 !important;
+                              background-color:#ba1e2b !important;
 
                               }
                               .navbar {
-                              background-color: #1ea5a5  !important;
+                              background-color: #ba1e2b  !important;
 
                               }
 
@@ -47,28 +45,30 @@ app_ui <- function(request) {
                         menuItem("Home", tabName = mod$home, icon = icon("home")),
 
                         ## Overview tab
-                        menuItem("Performance measures", startExpanded = TRUE,
+                        # menuItem("Performance measures", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
                                  menuItem("Recruitment", tabName = mod$recruit, icon = icon("chart-line")),
                                  menuItem("Recruitment (accrualPlot)", tabName = mod$recruit2, icon = icon("chart-line")),
                                  menuItem("Recruitment map", tabName = mod$recruitmap, icon = icon("map")),
                                  menuItem("Recruitment completion", tabName = mod$recruitment_prediction, icon = icon("chart-line")),
-                                 menuItem("Retention", tabName = mod$retention, startExpanded = TRUE, icon = icon("door-open")),
+                                 menuItem("Retention", tabName = mod$retention, startExpanded = TRUE, icon = icon("door-open"), badgeLabel = "Upcoming", badgeColor = "green"),
                                  menuItem("Data quality", startExpanded = TRUE, icon = icon("database"),
                                           menuItem("Completeness", tabName = mod$completeness),
                                           menuItem("Consistency", tabName = mod$consistency),
-                                          menuItem("Timeliness", tabName = mod$timeliness),
-                                          menuItem("Queries", tabName = mod$queries))),
-                        menuItem("Study management", startExpanded = TRUE,
+                                          menuItem("Timeliness", tabName = mod$timeliness, badgeLabel = "Upcoming", badgeColor = "green"),
+                                          menuItem("Queries", tabName = mod$queries)),
+                                 # ),
+                        # menuItem("Study management", startExpanded = TRUE,
                                  ## 1st SIDEBAR TAB: Recruitment and retention
-                                 menuItem("Follow-up visits", tabName = mod$visits, icon = icon("clinic-medical")),
-                                 menuItem("Participant characteristics", tabName = mod$participant, icon = icon("address-card")),
+                                 menuItem("Follow-up visits", tabName = mod$visits, icon = icon("clinic-medical"), badgeLabel = "Upcoming", badgeColor = "green"),
+                                 menuItem("Participant characteristics", tabName = mod$participant, icon = icon("address-card"), badgeLabel = "Upcoming", badgeColor = "green"),
                                  menuItem("Safety management", startExpanded = TRUE, icon = icon("notes-medical"),
                                           menuItem("Serious adverse events", tabName = mod$sae),
-                                          menuItem("Adverse events", tabName = mod$ae),
-                                          menuItem("Annual safety report", tabName = mod$asr)
+                                          menuItem("Adverse events", tabName = mod$ae, badgeLabel = "Upcoming", badgeColor = "green"),
+                                          menuItem("Annual safety report", tabName = mod$asr, badgeLabel = "Upcoming", badgeColor = "green")
 
-                                          )),
+                                          ),
+                                 # ),
 
                         ## Date range filter
                         dateRangeInput("period", "Randomization date:",

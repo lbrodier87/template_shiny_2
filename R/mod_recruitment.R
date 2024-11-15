@@ -25,18 +25,18 @@ mod_recruitment_ui <- function(id, label){
                     }
 
       .box.box-solid.box-primary{
-      border-bottom-color:#1ea5a5;
-      border-left-color:#1ea5a5;
-      border-right-color:#1ea5a5;
-      border-top-color:#1ea5a5;
+      border-bottom-color:#e4f1fa;
+      border-left-color:#e4f1fa;
+      border-right-color:#e4f1fa;
+      border-top-color:#e4f1fa;
                     }
 
                   ")),
 
 
           fluidRow(
-            tags$style(".small-box.bg-yellow { background-color: #a5d7d2 !important; color: #333333 !important; }"),
-            tags$style(".small-box.bg-red { background-color: #d20537 !important; color: #333333 !important; }"),
+            tags$style(".small-box.bg-yellow { background-color: #ba1e2b !important; color: #333333 !important; }"),
+            tags$style(".small-box.bg-red { background-color: #e4f1fa !important; color: #333333 !important; }"),
             valueBoxOutput(ns("randomized"), width = 6),
             valueBoxOutput(ns("estimated"), width = 6)
           ),
