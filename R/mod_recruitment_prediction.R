@@ -15,7 +15,7 @@ mod_recruitment_prediction_ui <- function(id, label) {
   tabItem(
     tabName = label,
     tabsetPanel(id = ns("switcher"), type="hidden", 
-                tabPanelBody("loading", icon('transfer', lib = 'glyphicon'), HTML('&nbsp;&nbsp;'), "loading... this is a test ", ),
+                tabPanelBody("loading", icon('transfer', lib = 'glyphicon'), HTML('&nbsp;&nbsp;'), "loading...", ),
                 tabPanelBody("not_authorized", icon("lock", "fa-2x"), HTML('&nbsp;&nbsp;'), "You are not authorized to access this module."),   
                 tabPanelBody("authorized",  
                   fluidRow(
