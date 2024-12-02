@@ -197,7 +197,7 @@ mod_completeness_server <- function(input, output, session, data){
   
   # Box general info ----
   output$box_overall_missing <- renderValueBox({
-    d = data()
+    d = data
     n_forms = length(d)
     n_var = purrr::map_dbl(d, ncol) %>% sum
     mean_miss = round( sum( purrr::map_dbl(d, ~ sum(is.na(.x))) ) / sum( purrr::map_dbl(d, ~prod(dim( .x))) ) * 100, 2 )
@@ -206,7 +206,7 @@ mod_completeness_server <- function(input, output, session, data){
   })
   # Main Tab: all forms ----
   output$overview_form_missingness <- renderPlot({
-    tibble( form = names(data()), perc.miss = purrr::map_dbl(data(), pct_miss) ) %>% 
+    tibble( form = names(data), perc.miss = purrr::map_dbl(data, pct_miss) ) %>% 
       ggplot(aes(x = form, y=perc.miss)) + geom_col() + ylim(0,100) + coord_flip() + 
       labs(x = "Forms", y = "Percentage missing") + theme_minimal() + 
       theme(
@@ -218,7 +218,7 @@ mod_completeness_server <- function(input, output, session, data){
   })
   
   output$overview_cum_missigness <- renderPlot({
-    d = data()
+    d = data
     len = length(d)
     n_col_plot = 3
     n_row_plot = len %/% n_col_plot + 1
@@ -250,8 +250,8 @@ mod_completeness_server <- function(input, output, session, data){
     selectInput(
       inputId = ns("form_name"),
       label = "Select form:",
-      choices = names(data()),
-      selected = names(data())[1]
+      choices = names(data),
+      selected = names(data)[1]
     )
     
   })
@@ -259,7 +259,7 @@ mod_completeness_server <- function(input, output, session, data){
   form_selected <- reactive({
     
     return(
-      data()[[input$form_name]]
+      data[[input$form_name]]
       )
     
   })
