@@ -11,6 +11,7 @@ if(!exists("users.sqlite")){
     admin = c(TRUE, FALSE, FALSE),
     comment = c(""),
     role = c("admin", "PI", "guest"),             # additional custom parameter
+    access_recruitment_prediction = c(TRUE, TRUE, FALSE),
     access_sae = c(TRUE, TRUE, FALSE),
     access_ae = c(FALSE, TRUE, FALSE),
     stringsAsFactors = FALSE
