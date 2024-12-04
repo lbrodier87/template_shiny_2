@@ -9,7 +9,7 @@
 app_server <- function(input, output, session ) {
   #check_credentials returns a function to authenticate users
   res_auth <- shinymanager::secure_server(
-    check_credentials = shinymanager::check_credentials("users.sqlite", "scto_rshiny_app")
+    check_credentials = shinymanager::check_credentials(db = "users.sqlite", passphrase = "scto_rshiny_app")
   )
   
   ## Get all module names

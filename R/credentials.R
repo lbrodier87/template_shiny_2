@@ -1,7 +1,8 @@
 #' The app uses the package 'shinymanager' for user management and login. 
 #' 
 #' This script creates the initial users for the shiny app in .sqlite database. 
-#' Execute the script only once to generate the 'users.sqlite' database.
+#' Execute the script only once to generate the 'users.sqlite' database. The 
+#' users database is generated only if the file users.sqlit is not found in directory. 
 #' 
 #' You can restrict access to the app to specific users, and control their right
 #' to access specific modules. 
@@ -11,7 +12,7 @@
 #' An administrator also controls the users rights to access the different modules. 
 #' 
 #' You can create a single initial admin user here, who will then manage the other 
-#' users in the app. 
+#' users in the app, or create multiple users directly here. 
 #' 
 #' @import shinymanager
 
@@ -20,18 +21,19 @@ if(!exists("users.sqlite")){
   credentials <- data.frame(
     # Usernames and passwords + admin rights (mandatory)
     user = c("admin", "user", "guest"), 
-    password = c("admin", "user", "guest"),
+    password = c("admin", "user", "guest"), #TODO edit default passwords for safety! 
     admin = c(TRUE, FALSE, FALSE),
-    # Other optional parameters: start date / expiration date / comment
+    # Other optional parameters: start date / expiration date / comment... 
     start = c("2023-04-18", NA, NA),                
     expire = c(NA, NA, "2025-31-12"),
     comment = c("Default admin", "Default user", "Default guest"),
-    # User additional parameters here to grant / refuse access to specific modules
+    # User additional parameters below to grant / refuse access to specific modules
     # You can either check a user role or use a specfic boolean in the modules
     role = c("admin", "user", "guest"),             
     access_recruitment_prediction = c(TRUE, TRUE, FALSE),
     access_sae = c(TRUE, TRUE, FALSE),
     access_ae = c(TRUE, TRUE, FALSE),
+    access_sae_st = c(TRUE, FALSE, FALSE),
     stringsAsFactors = FALSE
   )
   
@@ -39,6 +41,6 @@ if(!exists("users.sqlite")){
   shinymanager::create_db(
     credentials_data = credentials,
     sqlite_path = "users.sqlite",
-    passphrase = "scto_rshiny_app"
+    passphrase = "scto_rshiny_app" 
   )
 }

@@ -1,7 +1,9 @@
 #' Serious Adverse Events
 #'
-#' In development 
 #' This module is intended to get an overview of of the safety data. 
+#' This module has additional options optimized for secuTrial AE/SAE structure. 
+#' It is suggested to use this module in place of the more generic AE/SAE modules
+#' if you are working with secuTrial data. 
 #' 
 #' 
 #' @author Laurent Brodier (Laurent.Brodier@hug.ch)
@@ -9,11 +11,10 @@
 #' @import plotly
 #' @import reshape2
 #' @import DT
-#' 
+
 #' @rdname mod_sae_st
 #' @param id standard shiny id argument
 #' @param label standard shiny label argument
-
 mod_sae_st_ui <- function(id, label){
   #initialize namespace
   ns <- NS(id)
@@ -57,6 +58,7 @@ mod_sae_st_ui <- function(id, label){
                                             title = "",
                                             id = "tabset2",
                                             
+                                            #Tab Events occurence overtime - display a graph of events (AE and SAE) overtime (overall, and by center).
                                             tabPanel("Events occurence overtime",
                                                      h2("Cummulative events occurence overtime:"),
                                                      plotlyOutput(ns("sae_plot_1")),
@@ -64,6 +66,7 @@ mod_sae_st_ui <- function(id, label){
                                                      h2("Cummulative Events occurence overtime by center:"),
                                                      plotlyOutput(ns("sae_plot_2"))
                                             ),
+                                            #Tab Events number by characteristics - Highlight events (AE and SAE) characteristics, e.g. expected vs unexpected as color on barplot
                                             tabPanel("Events number by characteristics",
                                                      h2("Events number by center and by characteristics: "),
                                                      uiOutput(ns("sae_fact_sel_ui")),
@@ -73,10 +76,12 @@ mod_sae_st_ui <- function(id, label){
                                                      uiOutput(ns("sae_table_detail_var_ui")),
                                                      tableOutput(ns("sae_table")),
                                             ),
+                                            #Tab Events list - a event (AE and SAE) list in a searchable table
                                             tabPanel(width=12, "Events list",
                                                      h2("Events list:"),
                                                      div(DT::dataTableOutput(ns("sae_table_1")), style = "font-size: 90%; width: 100%")
                                             ),
+                                            # Tab AE/SAE distribution -  display the distribution of number of AE/SAE by patient
                                             tabPanel(width=12, "AE/SAE distribution",
                                                      fluidRow(
                                                        column(12, h3("Histogram of the number of events (AE only or AE+SAE) by patient"), plotlyOutput(ns("sae_histogram_1")))
@@ -93,6 +98,7 @@ mod_sae_st_ui <- function(id, label){
                                                        column(12, h3("Table of the number of events by patient"), tableOutput(ns("sae_nb_table")))
                                                      )
                                             ),
+                                            # Tab AE/SAE follow-up -  display the distribution of number of AE/SAE followups by patient
                                             tabPanel(width=12, "AE/SAE follow-up",
                                                      fluidRow(
                                                        column(12, h3("Histogram of the number of FU (AE+SAE FU) by event"), plotlyOutput(ns("sae_fu_histogram_1")))
@@ -120,7 +126,11 @@ mod_sae_st_ui <- function(id, label){
 #' @param input standard shiny input argument
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
-#' @param data.sae data for use in calculations
+#' @param ae secuTrial AE data (reactive data)
+#' @param sae secuTrial SAE data (reactive data)
+#' @param ae.static static data used to define the categories and filters (static data is used in order to get all option in the UI, even if a filtering is applied)
+#' @param sae.static static data used to define the categories and filters
+#' @param auth user authentication data, used to check user permissions to access the module
 mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.static, auth){
   ns <- session$ns
   
@@ -130,7 +140,7 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
     # e.g. you can use a role name or a specific variable for the module (defined in credentials.R)
     if(is.null(auth$access_sae) | is.null(auth$role)){
       return(NULL)
-    }else if(auth$access_sae == TRUE | auth$role %in% c("admin", "user")){
+    }else if(auth$access_sae_st == TRUE | auth$role %in% c("admin")){
       return(TRUE)
     }else{
       return(FALSE)
@@ -140,12 +150,17 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
   # Shows the tabset panel with the module UI if the user is authorized to access 
   # this module, or a tabset panel with a non-authorized message if the user is not authorized. 
   observe({
-    req(access_granted())
-    if(access_granted())
-      updateTabsetPanel(inputId = "switcher", selected = "authorized")
-    else{
-      updateTabsetPanel(inputId = "switcher", selected = "not_authorized")
-    }
+    observe({
+      try({
+        if(access_granted()){
+          updateTabsetPanel(inputId = "switcher", selected = "authorized")
+        }else if(!access_granted()){
+          updateTabsetPanel(inputId = "switcher", selected = "not_authorized")
+        }else{
+          updateTabsetPanel(inputId = "switcher", selected = "loading")
+        }
+      })
+    })
   })
   
   # TODO map the variable below to the corresponding variable names in your dataset
@@ -160,7 +175,7 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
   sae_severity <- "saegrade"
   ae_expectedness <- "aeexpect"  # expectedness of the SAE (e.g. expected / unexpected)
   sae_expectedness <- "saeexpect"
-  ae_causality <- "aerelationclinic" # causality of the SAE (e.g. certain / probable / possible / inlikely / not related / not assessable)
+  ae_causality <- "aerelationclinic" # causality of the SAE (e.g. certain / probable / possible / unlikely / not related / not assessable)
   sae_causality <- "saerelationclinic"
   ae_outcome <- "aeoutcome" # outcome of the SAE (e.g. death / ongoing / resolved without sequelae / resolved with sequelae / other)
   sae_outcome <- "saeoutcome"
@@ -202,20 +217,15 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
         input$ae_filter_expectedness, 
         input$ae_filter_report_type, quietly = T) 
 
-    # #data for AE/SAE (secuTrial)
-    # ae_path_st <- "s_export_CSV_DEVL8_20230320-145336/ae.csv"
-    # sae_path_st <- "s_export_CSV_DEVL8_20230320-145336/sae.csv"
-    # ae_st <- read.delim(ae_path_st, header = T, sep = ",")
-    # sae_st <- read.delim(sae_path_st, header = T, sep = ",")
-    # ae_st$centre.short <- sample(c("A", "B", "C", "D", "E"), nrow(ae_st), replace=T)
-    # #NEW#TEST#
-    # d <- merge(ae_st, sae_st, by = c("mnpaid", "mnpaeid", "mnpaefuid", "mnpaedate"), all=T)
-    
-    #filter data based on SAE filters in UI
+    #merge ae and SAE data based on secuTrial metavariables
     d_sae <- sae() #get input data
     d_ae <- ae()
     d <- merge(d_ae, d_sae, by = c("mnpaid", "mnpaeid", "mnpaefuid", "mnpaedate"), all=T)
 
+    #calculated additonal metavariables for merged data
+    # if event is a SAE -> get severity / expectedness / causality / outcome from SAE form variables
+    # if event is a AE -> get severity / expectedness / causality / outcome from AE form variables
+    # add a variable to define if an event is an initial report or a follow-up
     d$severity <- ""
     d$expectedness <- ""
     d$causality <- ""
@@ -241,8 +251,9 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
       }
     }
 
-    d$mnpaedate <- as.POSIXct(d$mnpaedate) #used as ref date in plots)
+    d$mnpaedate <- as.POSIXct(d$mnpaedate) #used as date in plots
     
+    #filter data based on SAE filters in UI
     d <- d[d[,"severity"] %in% input$ae_filter_severity,]
     d <- d[d[,"outcome"] %in% input$ae_filter_outcome,]
     d <- d[d[,"causality"] %in% input$ae_filter_causality,]
@@ -445,7 +456,7 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
     updateSelectInput(session, 'ae_filter_expectedness', label = l,  
                       choices = NULL, selected = NULL)
   })
-  observe({ #NEW#
+  observe({
     if(length(input$ae_filter_seriousness) == length(ae_seriousness_list())){
       l <- "Filter by seriousness"
     }else{
@@ -541,21 +552,14 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
                 selected = "None") 
   })
   
-  #### new tabs sT 2023 ####
-  # TODO # replace later with data passed to module
-  #ae_path_st <- "s_export_CSV_DEVL8_20230320-145336/ae.csv"
-  #sae_path_st <- "s_export_CSV_DEVL8_20230320-145336/sae.csv"
+  ## Code for 2 tabs specific for secuTrial module
+  #color parameters for events
   color_aesae <- 'royalblue'
   color_ae <- 'mediumseagreen'
   color_sae <- 'tomato'
   
   #nb event by patient - require AE + SAE datasets from sT
   nb_event_by_patient <- reactive({
-    # read export from sT for AE and SAE
-    # TODO # replace later with data passed to module
-    #ae <- read.delim(ae_path_st, header = T, sep = ",")
-    #sae <- read.delim(sae_path_st, header = T, sep = ",")
-    
     # get nb of events + nb of AE + nb of SAE by patient
     nb_event_by_patient_ae <- aggregate(data = ae(), mnpaeid ~ mnpaid, FUN = function(x){length(unique(x))})
     nb_event_by_patient_sae <- aggregate(data = sae(), mnpaeid ~ mnpaid, FUN = function(x){length(unique(x))})               
@@ -590,11 +594,6 @@ mod_sae_st_server <- function(input, output, session, ae, sae, ae.static, sae.st
   
   #nb fu by patient and by event (mnpaeid)
   nb_fu_by_aeid <- reactive({
-    # read export from sT for AE and SAE
-    # TODO # replace later with data passed to module
-    #ae <- read.delim(ae_path_st, header = T, sep = ",")
-    #sae <- read.delim(sae_path_st, header = T, sep = ",")
-    
     nb_fu_by_aeid_ae <- aggregate(data=ae(), mnpaefuid ~ mnpaeid * mnpaid, length)
     nb_fu_by_aeid_sae <- aggregate(data=sae(), mnpaefuid ~ mnpaeid, length)
     nb_fu_by_aeid <- merge(nb_fu_by_aeid_ae, nb_fu_by_aeid_sae, by = "mnpaeid", suffixes = c(".event", ".sae"), all = T)

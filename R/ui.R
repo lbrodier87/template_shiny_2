@@ -65,7 +65,7 @@ app_ui <- function(request) {
                                  menuItem("Safety management", startExpanded = TRUE, icon = icon("notes-medical"),
                                           menuItem("Serious adverse events", tabName = mod$sae),
                                           menuItem("Adverse events", tabName = mod$ae),
-                                          menuItem("Serious adverse events (sT)", tabName = mod$sae_st),
+                                          menuItem("(Serious) Adverse events (sT)", tabName = mod$sae_st),
                                           menuItem("Annual safety report", tabName = mod$asr, badgeLabel = "Upcoming", badgeColor = "green")
 
                                           ),

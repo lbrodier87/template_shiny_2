@@ -1,6 +1,9 @@
 #' Adverse Events
 #'
-#' In development
+#' This module is intended to get an overview of of the safety data. 
+#' This module will display the SAE with filters based on AE characteristics.
+#' This module is very similar to the SAE module, to used with AE data. 
+#' 
 #' @rdname mod_ae
 #' @param id standard shiny id argument
 #' @param label standard shiny label argument
@@ -45,7 +48,7 @@ mod_ae_ui <- function(id, label){
                                      tabBox(width = 12,
                                             title = "",
                                             id = "tabset2",
-                                            
+                                            #Tab AE occurence overtime - display a graph of AE overtime (overall, and by center).
                                             tabPanel("AE occurence overtime", 
                                                      h2("Cummulative AE occurence overtime:"),
                                                      plotlyOutput(ns("ae_plot_1")), 
@@ -53,6 +56,7 @@ mod_ae_ui <- function(id, label){
                                                      h2("Cummulative AE occurence overtime by center:"),
                                                      plotlyOutput(ns("ae_plot_2"))
                                             ),
+                                            #Tab AE number by characteristics - Highlight SAE characteristics, e.g. expected vs unexpected as color on barplot
                                             tabPanel("AE number by characteristics", 
                                                      h2("AE number by center and by characteristics: "), 
                                                      uiOutput(ns("ae_fact_sel_ui")),
@@ -62,6 +66,7 @@ mod_ae_ui <- function(id, label){
                                                      uiOutput(ns("ae_table_detail_var_ui")), 
                                                      tableOutput(ns("ae_table")),
                                             ), 
+                                            #Tab SAE list - a SAE list in a searchable table
                                             tabPanel(width=12, "AE list",
                                                      h2("AE list:"),
                                                      div(DT::dataTableOutput(ns("ae_table_1")), style = "font-size: 90%; width: 100%")
@@ -77,7 +82,9 @@ mod_ae_ui <- function(id, label){
 #' @param input standard shiny input argument
 #' @param output standard shiny output argument
 #' @param session standard shiny session argument
-#' @param data data for use in calculations
+#' @param data.ae data for use in calculations
+#' @param data.ae.static data used to define the categories and filters (static data is used in order to get all option in the UI, even if a filtering is applied)
+#' @param auth user authentication data, used to check user permissions to access the module
 mod_ae_server <- function(input, output, session, data.ae, data.ae.static, auth){
   ns <- session$ns
   
@@ -97,24 +104,26 @@ mod_ae_server <- function(input, output, session, data.ae, data.ae.static, auth)
   # Shows the tabset panel with the module UI if the user is authorized to access 
   # this module, or a tabset panel with a non-authorized message if the user is not authorized. 
   observe({
-    req(access_granted())
-    if(access_granted())
-      updateTabsetPanel(inputId = "switcher", selected = "authorized")
-    else{
-      updateTabsetPanel(inputId = "switcher", selected = "not_authorized")
-    }
+    #req(access_granted())
+    try({
+      if(access_granted()){
+        updateTabsetPanel(inputId = "switcher", selected = "authorized")
+      }else if(!access_granted()){
+        updateTabsetPanel(inputId = "switcher", selected = "not_authorized")
+      }else{
+        updateTabsetPanel(inputId = "switcher", selected = "loading")
+      }
+    })
   })
   
   # TODO map the variable below to the corresponding variable names in your dataset
   record_id <- "pat_id" # unique ID of the participant
-  ae_id = "ae_id" #NEW
-  ae_gp_id = "ae_gp_id" #NEW
   center <- "centre.short" # center or data access group of participant
   ae_date <- "ae_date" # date of the AE
   ae_report_type <- "ae_report_type" # type of AE report (e.g. initial / follow-up / final)
   severity_level <- "severity_level" # severity level of the AE (e.g. mild / moderate / severe)
   expectedness <- "expectedness" # expectedness of the AE (e.g. expected / unexpected)
-  causality <- "causality" # causality of the AE (e.g. certain / probable / possible / inlikely / not related / not assessable)
+  causality <- "causality" # causality of the AE (e.g. certain / probable / possible / unlikely / not related / not assessable)
   outcome <- "outcome" # outcome of the AE (e.g. death / ongoing / resolved without sequelae / resolved with sequelae / other)
   
   # TODO list here the AE variables that are factors, they will be available in 
@@ -288,7 +297,8 @@ mod_ae_server <- function(input, output, session, data.ae, data.ae.static, auth)
   })
   
   
-  ## Dynamic UI code
+  ## Dynamic UI code - used to create the filters based on dataset content
+  #  get a list of unique values for each variable used in filters
   #list of content - report type
   ae_report_type_list <- reactive({
     unique(data.ae.static[, ae_report_type])
@@ -323,7 +333,7 @@ mod_ae_server <- function(input, output, session, data.ae, data.ae.static, auth)
     nm
   })
   
-  # Add an * to filters when they are active
+  # Add an * to filters when they are active (= some data filtered out) in the UI
   observe({
     if(length(input$ae_filter_report_type) == length(ae_report_type_list()) ){
       l <- "Filter by report type"
@@ -370,6 +380,7 @@ mod_ae_server <- function(input, output, session, data.ae, data.ae.static, auth)
                       choices = NULL, selected = NULL)
   })
   
+  # Create the filters as renderUI, using the list of unique values for filter variables as choices
   # Dynamic UI - report type
   output$ae_filter_report_type_ui <- renderUI({
     choices <- ae_report_type_list()
