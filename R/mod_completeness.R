@@ -265,7 +265,7 @@ mod_completeness_server <- function(input, output, session, data){
   })
   
   output$vis_miss <- renderPlot({
-    form_selected() %>% vis_dat_data_type_simpl() + labs(y = "Patients") + coord_flip() +
+    form_selected() %>% vis_dat_data_type_simpl() + labs(y = "Patients") +
       set_font_size
   })
   
